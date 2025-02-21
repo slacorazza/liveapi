@@ -9,5 +9,5 @@ class CaseSerializer(serializers.ModelSerializer):
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields =  ['case', 'timestamp', 'name']	
+        fields =  ['id','case', 'timestamp', 'name', 'case_index']	
         

@@ -1,50 +1,75 @@
-# OFI Dashboard Backend
+# OFI Services Process Mining API
 
-This is a Dockerized Django REST application that provides API endpoints to a front-end dashboard for process mining for the company OFI Services.
+This is a Django REST application that provides API endpoints to a front-end dashboard for process mining for the company OFI Services. The API is hosted at [https://ofiservices.pythonanywhere.com/api/](https://ofiservices.pythonanywhere.com/api/).
 
-## Project Structure
-ofi_dashboard_backend/ manage.py ofi_dashboard_backend/ __init__.py asgi.py settings.py urls.py wsgi.py
+## Table of Contents
 
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Endpoints](#api-endpoints)
+- [Authentication](#authentication)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
+## Introduction
 
-## Prerequisites
+OFI Services Process Mining API allows you to interact with the company's process data through a RESTful interface. This API is designed to support the front-end dashboard, enabling users to visualize and analyze business processes.
 
-- Docker
-- Docker Compose
+## Features
 
-## Setup
+- Retrieve process data
+- Filter and search process instances
+- Create, update, and delete process-related data
+- Authentication and authorization
+
+## Installation
+
+To get started with the API, follow these steps:
 
 1. Clone the repository:
-
-    ```sh
-    git clone https://github.com/yourusername/ofi_dashboard_backend.git
-    cd ofi_dashboard_backend
+    ```bash
+    git clone https://github.com/yourusername/ofi-services-api.git
+    cd ofi-services-api
     ```
 
-2. Build and run the Docker containers:
-
-    ```sh
-    docker-compose up --build
+2. Create and activate a virtual environment:
+    ```bash
+    python3 -m venv env
+    source env/bin/activate
     ```
 
-3. Apply database migrations:
-
-    ```sh
-    docker-compose run web python manage.py migrate
+3. Install the required dependencies:
+    ```bash
+    pip install -r requirements.txt
     ```
 
-4. Create a superuser:
-
-    ```sh
-    docker-compose run web python manage.py createsuperuser
+4. Apply database migrations:
+    ```bash
+    python manage.py migrate
     ```
 
-5. Access the application at [http://localhost:8000](http://localhost:8000).
+5. Run the development server:
+    ```bash
+    python manage.py runserver
+    ```
+
+## Usage
+
+Access the API at `http://127.0.0.1:8000/api/` (for local development) or [https://ofiservices.pythonanywhere.com/api/](https://ofiservices.pythonanywhere.com/api/).
+
+Use a tool like Postman or cURL to interact with the API endpoints.
 
 ## API Endpoints
 
-The API endpoints will be documented here once they are implemented.
+### Process Data
 
-## Deployment
+- `GET /api/processes/` - Retrieve a list of processes
+- `GET /api/processes/{id}/` - Retrieve a specific process by ID
+- `POST /api/processes/` - Create a new process
+- `PUT /api/processes/{id}/` - Update an existing process
+- `DELETE /api/processes/{id}/` - Delete a process
 
-For deployment, follow the instructions provided by your hosting provider. Ensure that you set the `DJANGO_SETTINGS_MODULE` environment variable to `ofi_dashboard_backend.settings`.
+
