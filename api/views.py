@@ -69,26 +69,18 @@ class ActivityList(APIView):
         return paginator.get_paginated_response(serializer.data)
     
 
-# View for listing all distinct activity names
-class ActivityNamesList(APIView):
+# View for listing all distinct activity names and case IDs
+class DistinctActivityData(APIView):
     """
-    API view to retrieve a list of all distinct activity names.
+    API view to retrieve a list of all distinct activity names and case IDs.
     """
     def get(self, request, format=None):
         """
-        Handle GET request to list all distinct activity names.
+        Handle GET request to list all distinct activity names and case IDs.
         """
         distinct_names = Activity.objects.values_list('name', flat=True).distinct()
-        return Response(distinct_names)
-
-#View for listing all distinct case names
-class ActivityCaseList(APIView):
-    """
-    API view to retrieve a list of all distinct case names.
-    """
-    def get(self, request, format=None):
-        """
-        Handle GET request to list all distinct case names.
-        """
-        distinct_case = Activity.objects.values_list('case', flat=True).distinct()
-        return Response(distinct_case)
+        distinct_cases = Activity.objects.values_list('case', flat=True).distinct()
+        return Response({
+            'distinct_names': distinct_names,
+            'distinct_cases': distinct_cases
+        })
