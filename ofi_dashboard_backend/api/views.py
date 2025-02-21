@@ -1,5 +1,3 @@
-
-
 from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.response import Response
@@ -8,26 +6,49 @@ from .models import Case, Activity
 from .serializers import CaseSerializer, ActivitySerializer
 from rest_framework.pagination import PageNumberPagination
 
+
+# View for listing and creating Case objects
 class CaseListCreate(generics.ListCreateAPIView):
+    """
+    API view to retrieve list of cases or create new
+    """
     queryset = Case.objects.all()
     serializer_class = CaseSerializer
 
+# View for listing and creating Activity objects
 class activityListCreate(generics.ListCreateAPIView):
+    """
+    API view to retrieve list of activities or create new
+    """
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
 
+# View for retrieving, updating, and destroying Case objects
 class CaseRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    """
+    API view to retrieve, update or delete case
+    """
     queryset = Case.objects.all()
     serializer_class = CaseSerializer
     lookup_field = 'id'
 
+# View for retrieving, updating, and destroying Activity objects
 class ActivityRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    """
+    API view to retrieve, update or delete activity
+    """
     queryset = Activity.objects.all()
 
-from rest_framework.pagination import PageNumberPagination
-
+# Custom view for listing Activity objects with optional filtering and pagination
 class ActivityList(APIView):
+    """
+    API view to retrieve list of activities with optional filtering by case IDs and names.
+    Supports pagination.
+    """
     def get(self, request, format=None):
+        """
+        Handle GET request to list activities with optional filtering and pagination
+        """
         case_ids = request.query_params.getlist('case')
         names = request.query_params.getlist('name')
 
@@ -46,3 +67,28 @@ class ActivityList(APIView):
         paginated_activities = paginator.paginate_queryset(activities, request)
         serializer = ActivitySerializer(paginated_activities, many=True)
         return paginator.get_paginated_response(serializer.data)
+    
+
+# View for listing all distinct activity names
+class ActivityNamesList(APIView):
+    """
+    API view to retrieve a list of all distinct activity names.
+    """
+    def get(self, request, format=None):
+        """
+        Handle GET request to list all distinct activity names.
+        """
+        distinct_names = Activity.objects.values_list('name', flat=True).distinct()
+        return Response(distinct_names)
+
+#View for listing all distinct case names
+class ActivityCaseList(APIView):
+    """
+    API view to retrieve a list of all distinct case names.
+    """
+    def get(self, request, format=None):
+        """
+        Handle GET request to list all distinct case names.
+        """
+        distinct_case = Activity.objects.values_list('case', flat=True).distinct()
+        return Response(distinct_case)

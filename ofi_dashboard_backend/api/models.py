@@ -1,12 +1,30 @@
 from django.db import models
 from .constants import ACTIVITY_CHOICES
+
+#The models are the representations of the database tables. They are used to interact with the database.
 class Case(models.Model):
+    """
+    A model representing a case.
+
+    Attributes:
+        id (int): The primary key for the case.
+    """
     id = models.AutoField(primary_key=True)
 
     def __str__(self):
         return f"Case {self.id}"
 
 class Activity(models.Model):
+    """
+    A model representing an activity related to a case.
+
+    Attributes:
+        id (int): The primary key for the activity.
+        case (Case): The ID of the related case.
+        timestamp (datetime): The timestamp of the activity.
+        name (str): The name of the activity, chosen from ACTIVITY_CHOICES.
+        case_index (int): The index of the case, with a default value of 0.
+    """
     id = models.AutoField(primary_key=True)
     case = models.ForeignKey(Case, related_name='activities', on_delete=models.CASCADE)
     timestamp = models.DateTimeField()
