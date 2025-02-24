@@ -7,5 +7,5 @@ class CorsMiddleware:
 
     def __call__(self, request):
         response = self.get_response(request)
-        response["Access-Control-Allow-Origin"] = "http://127.0.0.1:8000"
+        response["Access-Control-Allow-Origin"] = "https://ofiservices.pythonanywhere.com/"
         return response
