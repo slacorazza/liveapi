@@ -2,86 +2,48 @@ from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Case, Activity
-from .serializers import CaseSerializer, ActivitySerializer
+from .models import Invoice
+from .serializers import InvoiceSerializer
 from rest_framework.pagination import PageNumberPagination
 
 
-# View for listing and creating Case objects
-class CaseListCreate(generics.ListCreateAPIView):
-    """
-    API view to retrieve list of cases or create new
-    """
-    queryset = Case.objects.all()
-    serializer_class = CaseSerializer
 
-# View for listing and creating Activity objects
-class activityListCreate(generics.ListCreateAPIView):
-    """
-    API view to retrieve list of activities or create new
-    """
-    queryset = Activity.objects.all()
-    serializer_class = ActivitySerializer
 
-# View for retrieving, updating, and destroying Case objects
-class CaseRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-    """
-    API view to retrieve, update or delete case
-    """
-    queryset = Case.objects.all()
-    serializer_class = CaseSerializer
-    lookup_field = 'id'
-
-# View for retrieving, updating, and destroying Activity objects
-class ActivityRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-    """
-    API view to retrieve, update or delete activity
-    """
-    queryset = Activity.objects.all()
-
-# Custom view for listing Activity objects with optional filtering and pagination
-class ActivityList(APIView):
-    """
-    API view to retrieve list of activities with optional filtering by case IDs and names.
-    Supports pagination.
-    """
+class InvoiceList(APIView):
     def get(self, request, format=None):
-        """
-        Handle GET request to list activities with optional filtering and pagination
-        """
-        case_ids = request.query_params.getlist('case')
-        names = request.query_params.getlist('name')
 
-        if case_ids and names:
-            activities = Activity.objects.filter(case__id__in=case_ids, name__in=names)
-        elif case_ids:
-            activities = Activity.objects.filter(case__id__in=case_ids)
-        elif names:
-            activities = Activity.objects.filter(name__in=names)
-        else:
-            activities = Activity.objects.all()
+        references = request.query_params.getlist('reference')
+        vendors = request.query_params.getlist('vendor')
+        patterns = request.query_params.getlist('pattern')
+        open = request.query_params.get('open')
+        group = request.query_params.get('group')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
 
-        activities = activities.order_by('timestamp')
+        invoices = Invoice.objects.all()
+        if references:
+            invoices = invoices.filter(reference__in=references)
+        if vendors:
+            invoices = invoices.filter(vendor__in=vendors)
+
+        if patterns:
+            invoices = invoices.filter(pattern__in=patterns)
+        if open:
+            invoices = invoices.filter(open__in=open)
+        if group:
+            invoices = invoices.filter(group__in=group)
+        if start_date:
+            invoices = invoices.filter(date__gte=start_date)
+        if end_date:
+            invoices = invoices.filter(date__lte=end_date)
 
         paginator = PageNumberPagination()
-        paginated_activities = paginator.paginate_queryset(activities, request)
-        serializer = ActivitySerializer(paginated_activities, many=True)
+        paginated_invoices = paginator.paginate_queryset(invoices, request)
+        serializer = InvoiceSerializer(paginated_invoices, many=True)
         return paginator.get_paginated_response(serializer.data)
-    
 
-# View for listing all distinct activity names and case IDs
-class DistinctActivityData(APIView):
-    """
-    API view to retrieve a list of all distinct activity names and case IDs.
-    """
+class KPIsList(APIView):
     def get(self, request, format=None):
-        """
-        Handle GET request to list all distinct activity names and case IDs.
-        """
-        distinct_names = Activity.objects.values_list('name', flat=True).distinct()
-        distinct_cases = Activity.objects.values_list('case', flat=True).distinct()
-        return Response({
-            'distinct_names': distinct_names,
-            'distinct_cases': distinct_cases,
-            'attributes': ['ID', 'TIMESTAMP', 'ACTIVIDAD']
-        })
+       # non_unique_invoices_count = Invoice.objects.exclude(pattern='unique').count()
+       # non_unique_total_value = Invoice.objects.exclude(pattern='unique').aggregate(total_value=Invoice.Sum('value'))['total_value']
+        return Response({'Total similar invoices': 15 , 'Total open similar invoices': 10, 'Total value of similar invoices': 10000, 'Total value of open similar invoices': 5000})

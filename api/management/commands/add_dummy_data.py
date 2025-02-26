@@ -41,16 +41,16 @@ class Command(BaseCommand):
                     except ValueError:
                         raise ValueError(f"Invalid date format: {date_str} in row {row_number}")
                 value = row['Group Value']
-                vendor = row['Vendor']
+                vendor = row['Vendor'].split(' - ', 1)[-1]
                 pattern = row['Group Pattern']
                 open_ = random.choice([True, False])
                 group_id = row['Group UUID']
-
+                confidense = row['Confidence'].strip()
                 if 'Open' in row['Group Contains']:
                     open_ = True
                 else:
                     open_ = False
 
-                Invoice.objects.create(reference=invoice_ref, date=date, value=value, vendor=vendor, pattern=pattern, open=open_, group_id=group_id)
+                Invoice.objects.create(reference=invoice_ref, date=date, value=value, vendor=vendor, pattern=pattern, open=open_, group_id=group_id, confidence=confidense)
                     
         self.stdout.write(self.style.SUCCESS('Data added successfully'))

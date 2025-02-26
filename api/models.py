@@ -1,35 +1,28 @@
 from django.db import models
-from .constants import ACTIVITY_CHOICES
+from .constants import PATTERN_CHOICES
 
-#The models are the representations of the database tables. They are used to interact with the database.
-class Case(models.Model):
+class Invoice(models.Model):
     """
-    A model representing a case.
+    Model representing an invoice.
 
     Attributes:
-        id (int): The primary key for the case.
+        reference (str): The unique reference for the invoice.
+        date (datetime): The date of the invoice.
+        value (decimal): The value of the invoice.
+        vendor (str): The name of the vendor without code.
+        pattern (str): The pattern type of the invoice.
+        open (bool): Thestatus of the invoice, can be open or closed.
+        group_id (str): The group ID associated with the invoice.
+        confidence (str): The confidence level of the invoice.
     """
-    id = models.AutoField(primary_key=True)
+    reference = models.CharField(max_length=50, primary_key=True)
+    date = models.DateTimeField(null=True, blank=True)
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    vendor = models.CharField(max_length=50)
+    pattern = models.CharField(max_length=50, choices=PATTERN_CHOICES)
+    open = models.BooleanField(default=True)
+    group_id = models.CharField(max_length=50)
+    confidence = models.CharField(max_length=6)
 
     def __str__(self):
-        return f"Case {self.id}"
-
-class Activity(models.Model):
-    """
-    A model representing an activity related to a case.
-
-    Attributes:
-        id (int): The primary key for the activity.
-        case (Case): The ID of the related case.
-        timestamp (datetime): The timestamp of the activity.
-        name (str): The name of the activity, chosen from ACTIVITY_CHOICES.
-        case_index (int): The index of the case, with a default value of 0.
-    """
-    id = models.AutoField(primary_key=True)
-    case = models.ForeignKey(Case, related_name='activities', on_delete=models.CASCADE)
-    timestamp = models.DateTimeField()
-    name = models.CharField(max_length=25, choices=ACTIVITY_CHOICES)
-    case_index = models.IntegerField(default=0)
-
-    def __str__(self):
-        return f"{self.case.id} - {self.name} at {self.timestamp}"
+        return f"Invoice {self.reference} from {self.vendor} on {self.date}"

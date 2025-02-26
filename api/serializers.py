@@ -1,36 +1,21 @@
 from rest_framework import serializers
-from .models import Case, Activity
+from .models import Invoice
 
+## Serializers are used to convert complex data types, such as querysets and model instances, to native Python datatypes that can then be easily rendered into JSON, XML or other content types.
 
-## Serializer are used to convert complex data types, such as querysets and model instances, to native Python datatypes that can then be easily rendered into JSON, XML or other content types.
-
-class CaseSerializer(serializers.ModelSerializer):
+class InvoiceSerializer(serializers.ModelSerializer):
     """
-    Serializer for the Case model.
+    Serializer for the Invoice model.
 
-    This serializer converts Case instances to native Python datatypes
-    that can be easily rendered into JSON, XML or other content types.
+    Converts Invoice model instances to native Python datatypes that can be easily rendered into JSON, XML, or other content types.
 
     Meta:
-        model (Case): The model to be serialized.
-        fields (str): All fields of the model.
+        model (Invoice): The model that is being serialized.
+        fields (tuple): The fields of the model that should be included in the serialized output.
     """
+
+    value = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=False)
+    
     class Meta:
-        model = Case
-        fields = '__all__'
-
-class ActivitySerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Activity model.
-
-    This serializer converts Activity instances to native Python datatypes
-    that can be easily rendered into JSON, XML or other content types.
-
-    Meta:
-        model (Activity): The model to be serialized.
-        fields (list): The fields of the model to be serialized.
-    """
-    class Meta:
-        model = Activity
-        fields =  ['id','case', 'timestamp', 'name', 'case_index']	
-        
+        model = Invoice
+        fields = 'reference', 'date', 'value', 'vendor', 'pattern', 'open', 'group_id', 'confidence'
