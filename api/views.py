@@ -82,5 +82,6 @@ class DistinctActivityData(APIView):
         distinct_cases = Activity.objects.values_list('case', flat=True).distinct()
         return Response({
             'distinct_names': distinct_names,
-            'distinct_cases': distinct_cases
+            'distinct_cases': distinct_cases,
+            'attributes': ['ID', 'TIMESTAMP', 'ACTIVIDAD']
         })
