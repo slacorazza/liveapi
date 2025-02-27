@@ -94,10 +94,20 @@ class VariantList(APIView):
         """
         Handle GET request to list all distinct activity names and case IDs.
         """
+
+        activities_param = request.query_params.getlist('activities')
+        cases_param = request.query_params.getlist('cases')
         variants = Variant.objects.all()
+        if activities_param:
+            for param in activities_param:
+                variants = Variant.objects.filter(activities__icontains=param)
+                print(param)
+            
+
         variants = variants.order_by('percentage').reverse()
-        serializer = VariantSerializer(variants, many=True)
+        
         paginator = PageNumberPagination()
         paginated_activities = paginator.paginate_queryset(variants, request)
+        serializer = VariantSerializer(paginated_activities, many=True)
         return paginator.get_paginated_response(serializer.data)
 
