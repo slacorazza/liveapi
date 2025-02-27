@@ -33,3 +33,21 @@ class Activity(models.Model):
 
     def __str__(self):
         return f"{self.case.id} - {self.name} at {self.timestamp}"
+    
+class Variant(models.Model):
+    """
+    A model representing a variant.
+
+    Attributes:
+        id (int): The primary key for the variant.
+        activities (str): The activities of the variant.
+        cases (str): The cases of the variant.
+    """
+    id = models.AutoField(primary_key=True)
+    activities = models.CharField(max_length=50)
+    cases = models.CharField(max_length=50)
+    number_cases = models.IntegerField(default=0)
+    percentage = models.FloatField(default=0)
+
+    def __str__(self):
+        return self.name

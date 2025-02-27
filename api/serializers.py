@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Case, Activity
+from .models import Case, Activity, Variant
 
 
 ## Serializer are used to convert complex data types, such as querysets and model instances, to native Python datatypes that can then be easily rendered into JSON, XML or other content types.
@@ -33,4 +33,9 @@ class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
         fields =  ['id','case', 'timestamp', 'name', 'case_index']	
+
+class VariantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Variant
+        fields = ['id', 'activities', 'cases', 'number_cases', 'percentage']
         

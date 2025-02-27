@@ -8,6 +8,8 @@ urlpatterns = [
     path("activities/<int:id>/", views.ActivityRetrieveUpdateDestroy.as_view(), name="activity-retrieve-update-destroy"),
     # Custom view for listing Activity objects with optional filtering and pagination
     path("activity-list/", views.ActivityList.as_view(), name="activity-list"),
-     path('meta-data/', views.DistinctActivityData.as_view(), name='distinct-activity-data'),
+    path('meta-data/', views.DistinctActivityData.as_view(), name='distinct-activity-data'),
+    path('variants/', views.VariantList.as_view(), name='variant-list'),
+
 
 ]

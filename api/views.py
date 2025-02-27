@@ -2,8 +2,8 @@ from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Case, Activity
-from .serializers import CaseSerializer, ActivitySerializer
+from .models import Case, Activity, Variant
+from .serializers import CaseSerializer, ActivitySerializer, VariantSerializer
 from rest_framework.pagination import PageNumberPagination
 
 
@@ -85,3 +85,19 @@ class DistinctActivityData(APIView):
             'distinct_cases': distinct_cases,
             'attributes': ['CASE', 'TIMESTAMP', 'ACTIVIDAD']
         })
+    
+class VariantList(APIView):
+    """
+    API view to retrieve a list of all distinct activity names and case IDs.
+    """
+    def get(self, request, format=None):
+        """
+        Handle GET request to list all distinct activity names and case IDs.
+        """
+        variants = Variant.objects.all()
+        variants = variants.order_by('percentage').reverse()
+        serializer = VariantSerializer(variants, many=True)
+        paginator = PageNumberPagination()
+        paginated_activities = paginator.paginate_queryset(variants, request)
+        return paginator.get_paginated_response(serializer.data)
+
