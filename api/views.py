@@ -100,8 +100,10 @@ class VariantList(APIView):
         variants = Variant.objects.all()
         if activities_param:
             for param in activities_param:
-                variants = Variant.objects.filter(activities__icontains=param)
                 print(param)
+
+                variants = variants.filter(activities__icontains=param)
+                
             
 
         variants = variants.order_by('percentage').reverse()
@@ -111,3 +113,16 @@ class VariantList(APIView):
         serializer = VariantSerializer(paginated_activities, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+class KPIList(APIView):
+    """
+    API view to retrieve a list of all KPIs.
+    """
+    def get(self, request, format=None):
+        """
+        Handle GET request to list all distinct activity names and case IDs.
+        """
+
+        return Response({
+            'Mean time per case': '1.2s',
+            'Mean number of processes': 6,
+        })

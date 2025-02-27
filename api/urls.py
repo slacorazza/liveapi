@@ -10,6 +10,5 @@ urlpatterns = [
     path("activity-list/", views.ActivityList.as_view(), name="activity-list"),
     path('meta-data/', views.DistinctActivityData.as_view(), name='distinct-activity-data'),
     path('variants/', views.VariantList.as_view(), name='variant-list'),
-
-
+    path('KPI/', views.KPIList.as_view(), name='KPI'),
 ]
