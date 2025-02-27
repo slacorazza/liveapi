@@ -83,7 +83,7 @@ class DistinctActivityData(APIView):
         return Response({
             'distinct_names': distinct_names,
             'distinct_cases': distinct_cases,
-            'attributes': ['CASE', 'TIMESTAMP', 'ACTIVIDAD']
+            'attributes': ['CASE', 'TIMESTAMP', 'NAME']
         })
     
 class VariantList(APIView):
@@ -126,3 +126,29 @@ class KPIList(APIView):
             'Mean time per case': '1.2s',
             'Mean number of processes': 6,
         })
+
+
+class ActivityListNoPag(APIView):
+    """
+    API view to retrieve list of activities with optional filtering by case IDs and names.
+    """
+    def get(self, request, format=None):
+        """
+        Handle GET request to list activities with optional filtering
+        """
+        case_ids = request.query_params.getlist('case')
+        names = request.query_params.getlist('name')
+
+        if case_ids and names:
+            activities = Activity.objects.filter(case__id__in=case_ids, name__in=names)
+        elif case_ids:
+            activities = Activity.objects.filter(case__id__in=case_ids)
+        elif names:
+            activities = Activity.objects.filter(name__in=names)
+        else:
+            activities = Activity.objects.all()
+
+        activities = activities.order_by('timestamp')
+        serializer = ActivitySerializer(activities, many=True)
+        return Response(serializer.data)
+    

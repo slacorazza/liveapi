@@ -11,4 +11,6 @@ urlpatterns = [
     path('meta-data/', views.DistinctActivityData.as_view(), name='distinct-activity-data'),
     path('variants/', views.VariantList.as_view(), name='variant-list'),
     path('KPI/', views.KPIList.as_view(), name='KPI'),
+    path("nopag/", views.ActivityListNoPag.as_view(), name="activity-list-nopag"),
+
 ]
