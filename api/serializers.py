@@ -37,5 +37,5 @@ class ActivitySerializer(serializers.ModelSerializer):
 class VariantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Variant
-        fields = ['id', 'activities', 'cases', 'number_cases', 'percentage']
+        fields = ['id', 'activities', 'cases', 'number_cases', 'percentage', 'mean_time']
         

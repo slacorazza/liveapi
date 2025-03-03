@@ -5,28 +5,13 @@ from django.utils.dateparse import parse_datetime
 from django.conf import settings
 import os
 from collections import defaultdict
+from datetime import datetime
 
 class Command(BaseCommand):
     """
     Django management command to add data to the database from a CSV file.
     """
     help = 'Add data to the database from CSV file'
-
-
-    def if_case_exists(self, case_id):
-        """
-        Check if a case with the given ID already exists in the list of cases.
-
-        Args:
-            case_id (str): The ID of the case to check.
-
-        Returns:
-            bool: True if the case exists, False otherwise.
-        """
-        for case in self.cases:
-            if case.id == case_id:
-                return True
-        return False
 
     def handle(self, *args, **kwargs):
         """
@@ -42,18 +27,27 @@ class Command(BaseCommand):
             # List of cases to keep track of existing cases and identify case_index
             cases = []
             variants = {}
+            timesPerCase = defaultdict(list)
             for row in reader:
-                
                 case_id = row['ID']
-                #If the case is not in the list of cases, add it
+                # If the case is not in the list of cases, add it
                 if case_id not in cases:
                     cases.append(case_id)
                 case_index = cases.index(case_id)
 
-                timestamp = parse_datetime(row['TIMESTAMP'])
+                timestamp_str = row['TIMESTAMP']
+                minutes, seconds_fraction = timestamp_str.split(':')
+                seconds, fraction = seconds_fraction.split('.')
+                timestamp_str_corrected = f"{minutes}:{seconds}.{fraction}00000"
+                timestamp = datetime.strptime(timestamp_str_corrected, '%M:%S.%f')
+
+                
                 name = row['ACTIVIDAD']
 
-                #print(case_id, timestamp, name, case_index)
+                # Store the timestamp for calculating mean time
+                timesPerCase[case_id].append(timestamp)
+
+                #print(case_id, timestamp_str, timestamp_formatted, name, case_index)
                 # Get or create the case
                 case, created = Case.objects.get_or_create(id=case_id)
 
@@ -63,15 +57,11 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             for case in cases:
-                #print('CASEEEEEEEEE',case)
                 variants[case] = []
                 csvfile.seek(0)
                 for row in reader:
-                    #print(row['ID'], case)
                     if row['ID'] == case:
-                        #print (row['ID'], case)
                         variants[case].append(row['ACTIVIDAD'])
-                #print(case, variants[case])
 
             # Grouping keys by their value lists
             grouped_data = defaultdict(list)
@@ -80,16 +70,26 @@ class Command(BaseCommand):
 
             # Convert defaultdict to a regular dictionary and print the result
             grouped_data = dict(grouped_data)
-            #for key, value in grouped_data.items():
-            
+
             for key, value in grouped_data.items():
-                #print(key, value)
                 number_cases = len(value)
-                percentage = (number_cases/len(cases))*100
-                Variant.objects.create(activities=str(key), cases=str(value), number_cases=number_cases, percentage=percentage) 
+                percentage = (number_cases / len(cases)) * 100
 
-           
+                # Calculate mean time for the variant
+                total_duration = 0
+                for case_id in value:
+                    times = timesPerCase[case_id]
+                    times.sort()
+                    duration = (times[-1] - times[0]).total_seconds()
+                    total_duration += duration
+                mean_time = total_duration / number_cases
 
-            
+                Variant.objects.create(
+                    activities=str(key),
+                    cases=str(value),
+                    number_cases=number_cases,
+                    percentage=percentage,
+                    mean_time=mean_time
+                )
 
         self.stdout.write(self.style.SUCCESS('Data added successfully'))

@@ -100,8 +100,6 @@ class VariantList(APIView):
         variants = Variant.objects.all()
         if activities_param:
             for param in activities_param:
-                print(param)
-
                 variants = variants.filter(activities__icontains=param)
                 
             
@@ -122,10 +120,24 @@ class KPIList(APIView):
         Handle GET request to list all distinct activity names and case IDs.
         """
 
-        return Response({
-            'Mean time per case': '1.2s',
-            'Mean number of processes': 6,
-        })
+        kpi_data = {
+            "CREATE": 858.2068965517242,
+            "UPDATE": 387.2657608695652,
+            "RESOLUTION ADD": 2.3743589743589744,
+            "RESOLUTION UPDATE": 0.7166666666666667,
+            "RESOLVED": 0.0,
+            "DELETE": 1858.7931034482758,
+            "RESTORE": 795.3916666666668,
+            "SOLUTIONASSOCIATION": 905.4807692307693,
+            "SLA_VIOLATION": 3076.1,
+            "REQ_CONVER": 1364.2,
+            "CLOSE": 0.0,
+            "ADD_requesttask": 115.2
+        }
+
+        formatted_kpi_data = [{"name": name, "mean_time": mean_time} for name, mean_time in kpi_data.items()]
+
+        return Response(formatted_kpi_data)
 
 
 class ActivityListNoPag(APIView):
