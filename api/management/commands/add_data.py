@@ -38,7 +38,7 @@ class Command(BaseCommand):
             timesPerCase = defaultdict(list)
             for row in reader:
                 case_id = row['ID']
-                timestamp = datetime.strptime(row['TIMESTAMP'], "%M:%S.%f")
+                timestamp = datetime.strptime(row['TIMESTAMP'], "%Y-%m-%d %H:%M:%S")
                 timesPerCase[case_id].append(timestamp)
             CasesMeanTime = {}
             for case_id in timesPerCase.keys():
@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 meanTime = times[-1] - times[0]
                 CasesMeanTime[case_id] = meanTime.total_seconds()
                 # Add the mean time to the case
-                case, created = Case.objects.get_or_create(id=case_id, defaults={'mean_time': meanTime.total_seconds()})
+                case, created = Case.objects.get_or_create(id=case_id, defaults={'avg_time': meanTime.total_seconds()})
 
     def create_variants(self, *args, **kwargs):
         # Path to the CSV file
@@ -69,10 +69,7 @@ class Command(BaseCommand):
                 case_index = cases.index(case_id)
 
                 timestamp_str = row['TIMESTAMP']
-                minutes, seconds_fraction = timestamp_str.split(':')
-                seconds, fraction = seconds_fraction.split('.')
-                timestamp_str_corrected = f"{minutes}:{seconds}.{fraction}00000"
-                timestamp = datetime.strptime(timestamp_str_corrected, '%M:%S.%f')
+                timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
 
                 name = row['ACTIVIDAD']
 
@@ -117,7 +114,7 @@ class Command(BaseCommand):
                     cases=str(value),
                     number_cases=number_cases,
                     percentage=percentage,
-                    mean_time=mean_time
+                    avg_time=mean_time
                 )
 
     def create_activities(self):
@@ -138,10 +135,7 @@ class Command(BaseCommand):
                 case_index = cases.index(case_id)
 
                 timestamp_str = row['TIMESTAMP']
-                minutes, seconds_fraction = timestamp_str.split(':')
-                seconds, fraction = seconds_fraction.split('.')
-                timestamp_str_corrected = f"{minutes}:{seconds}.{fraction}00000"
-                timestamp = datetime.strptime(timestamp_str_corrected, '%M:%S.%f')
+                timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
 
                 name = row['ACTIVIDAD']
 

@@ -10,7 +10,7 @@ class Case(models.Model):
         id (int): The primary key for the case.
     """
     id = models.AutoField(primary_key=True)
-    mean_time = models.FloatField(default=0)
+    avg_time = models.FloatField(default=0)
 
     def __str__(self):
         return f"Case {self.id}"
@@ -49,7 +49,7 @@ class Variant(models.Model):
     cases = models.CharField(max_length=50)
     number_cases = models.IntegerField(default=0)
     percentage = models.FloatField(default=0)
-    mean_time = models.FloatField(default=0)
+    avg_time = models.FloatField(default=0)
 
     def __str__(self):
         return self.name

@@ -121,21 +121,29 @@ class KPIList(APIView):
         """
 
         kpi_data = {
-            "CREATE": 858.2068965517242,
-            "UPDATE": 387.2657608695652,
-            "RESOLUTION ADD": 2.3743589743589744,
-            "RESOLUTION UPDATE": 0.7166666666666667,
-            "RESOLVED": 0.0,
-            "DELETE": 1858.7931034482758,
-            "RESTORE": 795.3916666666668,
-            "SOLUTIONASSOCIATION": 905.4807692307693,
-            "SLA_VIOLATION": 3076.1,
-            "REQ_CONVER": 1364.2,
-            "CLOSE": 0.0,
-            "ADD_requesttask": 115.2
+            "CREATE": 15048.801916932907,
+            "UPDATE": 47251.18092909535,
+            "RESOLUTION ADD": 0.762589928057554,
+            "RESOLUTION UPDATE": 7.890625,
+            "RESOLVED": 2612.722891566265,
+            "DELETE": 1989.448275862069,
+            "RESTORE": 262133.72413793104,
+            "SOLUTIONASSOCIATION": 20056.153846153848,
+            "CLOSE": 686.4,
+            "SLA_VIOLATION": 35208.23529411765,
+            "REQ_CONVER": 15517.521739130434,
+            "ATT_ADD": 10.333333333333334,
+            "ADD_requestworklog": 57196.142857142855,
+            "ADD_requesttask": 16817.333333333332,
+            "COPY": 183335.82352941178,
+            "DELETE_requesttask": 27.0,
+            "REPLY": 163953.7142857143,
+            "ADD_requestResponse": 67130.0,
+            "FCR": 59986.0,
+            "UPDATE_requestworklog": 604.0
         }
 
-        formatted_kpi_data = [{"name": name, "mean_time": mean_time} for name, mean_time in kpi_data.items()]
+        formatted_kpi_data = [{"name": name, "avg_time": mean_time} for name, mean_time in kpi_data.items()]
 
         return Response(formatted_kpi_data)
 
