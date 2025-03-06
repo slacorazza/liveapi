@@ -12,5 +12,6 @@ urlpatterns = [
     path('variants/', views.VariantList.as_view(), name='variant-list'),
     path('KPI/', views.KPIList.as_view(), name='KPI'),
     path("nopag/", views.ActivityListNoPag.as_view(), name="activity-list-nopag"),
+    path("avg-time-pair/", views.ActivityPairTime.as_view(), name="avg-time-list"),
 
 ]
