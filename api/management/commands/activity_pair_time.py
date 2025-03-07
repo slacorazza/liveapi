@@ -22,6 +22,19 @@ class Command(BaseCommand):
                 case_index_list.append(activity.case_index)
         return case_index_list
     
+    def get_pair_activities(self, case_index):
+        # Get all activities pair for a case index and the time difference between them
+        activities = Activity.objects.filter(case_index=case_index).order_by('timestamp')
+        activity_pairs = defaultdict(lambda: {'time_difference': 0, })
+        for i in range(len(activities) - 1):
+            current_activity = activities[i]
+            next_activity = activities[i + 1]
+            pair = (current_activity.name, next_activity.name)
+            time_diff = (next_activity.timestamp - current_activity.timestamp).total_seconds()
+            activity_pairs[pair]['time_difference'] += time_diff
+        return activity_pairs
+
+
     def get_pair_list(self, case_index):
         activities = Activity.objects.filter(case_index=case_index).order_by('timestamp')
         activity_pairs = defaultdict(lambda: {'total_time': 0, 'occurrences': 0})
@@ -64,4 +77,4 @@ class Command(BaseCommand):
         """
         Handle the command to add data to the database from the CSV file.
         """
-        print(self.get_avg_time_list())
+        print(self.get_pair_activities(1))

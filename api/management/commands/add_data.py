@@ -145,6 +145,21 @@ class Command(BaseCommand):
                 # Create the activity
                 Activity.objects.create(case=case, timestamp=timestamp, name=name, case_index=case_index)
 
+    def add_TPT(self):
+        index_list = Activity.objects.values_list('case_index', flat=True).distinct()
+        for index in index_list:
+            activities = Activity.objects.filter(case_index=index).order_by('timestamp')
+
+            for i in range(len(activities) - 1):
+                current_activity = activities[i]
+                current_id = current_activity.id
+                next_activity = activities[i + 1]
+
+                time_diff = (next_activity.timestamp - current_activity.timestamp).total_seconds()
+                Activity.objects.filter(id=current_id).update(TPT=time_diff)
+
+
+
     def handle(self, *args, **kwargs):
         """
         Handle the command to add data to the database from the CSV file.
@@ -152,5 +167,6 @@ class Command(BaseCommand):
         self.create_cases()
         self.create_activities()
         self.create_variants()
+        self.add_TPT()
 
         self.stdout.write(self.style.SUCCESS('Data added successfully'))

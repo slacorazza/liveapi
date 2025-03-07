@@ -46,28 +46,30 @@ class ActivityList(APIView):
     API view to retrieve list of activities with optional filtering by case IDs and names.
     Supports pagination.
     """
-    def get(self, request, format=None):
+    def get(self, request):
         """
         Handle GET request to list activities with optional filtering and pagination
         """
-        case_ids = request.query_params.getlist('case')
-        names = request.query_params.getlist('name')
-        case_index = request.query_params.get('case_index')
-        if case_index:
-            activities = Activity.objects.filter(case_index=case_index)
-        if case_ids:
-            activities = activities.filter(case__id__in=case_ids)
-        if names:
-            activities = activities.filter(name__in=names)
+        try:
+            case_ids = request.query_params.getlist('case')
+            names = request.query_params.getlist('name')
+            case_index = request.query_params.get('case_index')
+            activities = Activity.objects.all()
+            if case_index:
+                activities = activities.filter(case_index=case_index)
+            if case_ids:
+                activities = activities.filter(case__id__in=case_ids)
+            if names:
+                activities = activities.filter(name__in=names)
 
+            activities = activities.order_by('timestamp')
 
-        activities = activities.order_by('timestamp')
-
-        paginator = PageNumberPagination()
-        paginated_activities = paginator.paginate_queryset(activities, request)
-        serializer = ActivitySerializer(paginated_activities, many=True)
-        return paginator.get_paginated_response(serializer.data)
-    
+            paginator = PageNumberPagination()
+            paginated_activities = paginator.paginate_queryset(activities, request)
+            serializer = ActivitySerializer(paginated_activities, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
 
 # View for listing all distinct activity names and case IDs
 class DistinctActivityData(APIView):
