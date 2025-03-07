@@ -32,7 +32,7 @@ class ActivitySerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Activity
-        fields =  ['id','case', 'timestamp', 'name', 'case_index', 'TPT']	
+        fields =  ['id','case', 'timestamp', 'name', 'case_index', 'tpt']	
 
 class VariantSerializer(serializers.ModelSerializer):
     class Meta:

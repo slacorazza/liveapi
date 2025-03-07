@@ -156,7 +156,7 @@ class Command(BaseCommand):
                 next_activity = activities[i + 1]
 
                 time_diff = (next_activity.timestamp - current_activity.timestamp).total_seconds()
-                Activity.objects.filter(id=current_id).update(TPT=time_diff)
+                Activity.objects.filter(id=current_id).update(tpt=time_diff)
 
 
 

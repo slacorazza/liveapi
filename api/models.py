@@ -31,7 +31,7 @@ class Activity(models.Model):
     timestamp = models.DateTimeField()
     name = models.CharField(max_length=25, choices=ACTIVITY_CHOICES)
     case_index = models.IntegerField(default=0)
-    TPT = models.FloatField(default=0)
+    tpt = models.FloatField(default=0)
 
     def __str__(self):
         return f"{self.case.id} - {self.name} at {self.timestamp}"

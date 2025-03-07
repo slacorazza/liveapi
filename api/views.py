@@ -85,7 +85,7 @@ class DistinctActivityData(APIView):
         return Response({
             'distinct_names': distinct_names,
             'distinct_cases': distinct_cases,
-            'attributes': ['CASE', 'TIMESTAMP', 'NAME']
+            'attributes': ['CASE', 'TIMESTAMP', 'NAME', 'TPT']
         })
     
 class VariantList(APIView):
