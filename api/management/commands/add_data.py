@@ -6,6 +6,8 @@ from django.conf import settings
 import os
 from datetime import datetime
 from collections import defaultdict
+import random
+from datetime import timedelta
 
 class Command(BaseCommand):
     """
@@ -49,73 +51,84 @@ class Command(BaseCommand):
                 # Add the mean time to the case
                 case, created = Case.objects.get_or_create(id=case_id, defaults={'avg_time': meanTime.total_seconds()})
 
-    def create_variants(self, *args, **kwargs):
-        # Path to the CSV file
+    def create_more_cases(self, initial):
+             # Path to the CSV file
         csv_file_path = os.path.join(settings.BASE_DIR, 'api', 'data', 'tabla_actividades.csv')
 
         # Read the CSV file
         with open(csv_file_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
-
-            # List of cases to keep track of existing cases and identify case_index
-            cases = []
-            variants = {}
             timesPerCase = defaultdict(list)
             for row in reader:
-                case_id = row['ID']
-                # If the case is not in the list of cases, add it
-                if case_id not in cases:
-                    cases.append(case_id)
-                case_index = cases.index(case_id)
-
-                timestamp_str = row['TIMESTAMP']
-                timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
-
-                name = row['ACTIVIDAD']
-
-                # Store the timestamp for calculating mean time
+                case_id = str(int(row['ID']) + initial)
+                timestamp = datetime.strptime(row['TIMESTAMP'], "%Y-%m-%d %H:%M:%S") + timedelta(seconds=random.randint(1, 10))
                 timesPerCase[case_id].append(timestamp)
-
-                # Get or create the case
-                case, created = Case.objects.get_or_create(id=case_id)
-            
-            reader = csv.DictReader(csvfile)
-
-            for case in cases:
-                variants[case] = []
-                csvfile.seek(0)
-                for row in reader:
-                    if row['ID'] == case:
-                        variants[case].append(row['ACTIVIDAD'])
-
-            # Grouping keys by their value lists
-            grouped_data = defaultdict(list)
-            for key, value in variants.items():
-                grouped_data[tuple(value)].append(key)
-
-            # Convert defaultdict to a regular dictionary and print the result
-            grouped_data = dict(grouped_data)
-
-            for key, value in grouped_data.items():
-                number_cases = len(value)
-                percentage = (number_cases / len(cases)) * 100
-
-                # Calculate mean time for the variant
-                total_duration = 0
-                for case_id in value:
-                    times = timesPerCase[case_id]
-                    times.sort()
-                    duration = (times[-1] - times[0]).total_seconds()
-                    total_duration += duration
-                mean_time = total_duration / number_cases
-
-                Variant.objects.create(
-                    activities=str(key),
-                    cases=str(value),
-                    number_cases=number_cases,
-                    percentage=percentage,
-                    avg_time=mean_time
-                )
+            CasesMeanTime = {}
+            for case_id in timesPerCase.keys():
+                times = timesPerCase[case_id]
+                times.sort()
+                meanTime = times[-1] - times[0]
+                CasesMeanTime[case_id] = meanTime.total_seconds()
+                # Add the mean time to the case
+                case, created = Case.objects.get_or_create(id=case_id, defaults={'avg_time': meanTime.total_seconds()})
+    
+    def create_variants(self, *args, **kwargs):
+        """
+        Create variants based on activities and their timestamps.
+        """
+        # List of cases to keep track of existing cases and identify case_index
+        cases = []
+        variants = defaultdict(list)
+        timesPerCase = defaultdict(list)
+        activities = Activity.objects.all()
+    
+        for activity in activities:
+            case_id = activity.case.id
+    
+            if case_id not in cases:
+                cases.append(case_id)
+            case_index = cases.index(case_id)
+            timestamp = activity.timestamp
+    
+            name = activity.name
+    
+            # Store the timestamp for calculating mean time
+            timesPerCase[case_id].append(timestamp)
+    
+            # Get or create the case
+            case, created = Case.objects.get_or_create(id=case_id)
+    
+            # Append activity name to the variants dictionary
+            variants[case_id].append(name)
+    
+        # Grouping keys by their value lists
+        grouped_data = defaultdict(list)
+        for key, value in variants.items():
+            grouped_data[tuple(value)].append(key)
+    
+        # Convert defaultdict to a regular dictionary and print the result
+        grouped_data = dict(grouped_data)
+    
+        for key, value in grouped_data.items():
+            number_cases = len(value)
+            percentage = (number_cases / len(cases)) * 100
+    
+            # Calculate mean time for the variant
+            total_duration = 0
+            for case_id in value:
+                times = timesPerCase[case_id]
+                times.sort()
+                duration = (times[-1] - times[0]).total_seconds()
+                total_duration += duration
+            mean_time = total_duration / number_cases
+    
+            Variant.objects.create(
+                activities=str(key),
+                cases=str(value),
+                number_cases=number_cases,
+                percentage=percentage,
+                avg_time=mean_time
+            )
 
     def create_activities(self):
         # Path to the CSV file
@@ -145,6 +158,35 @@ class Command(BaseCommand):
                 # Create the activity
                 Activity.objects.create(case=case, timestamp=timestamp, name=name, case_index=case_index)
 
+    def create_more_activities(self, initial):
+         # Path to the CSV file
+        csv_file_path = os.path.join(settings.BASE_DIR, 'api', 'data', 'tabla_actividades.csv')
+
+        # Read the CSV file
+        with open(csv_file_path, newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+
+            # List of cases to keep track of existing cases and identify case_index
+            cases = []
+            for row in reader:
+                case_id = str(int(row['ID']) + initial)
+                # If the case is not in the list of cases, add it
+                if case_id not in cases:
+                    cases.append(case_id)
+                case_index = cases.index(case_id)
+
+                timestamp_str = row['TIMESTAMP']
+                timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S') + timedelta(seconds=random.randint(0, 10))
+
+                name = row['ACTIVIDAD']
+
+                # Get or create the case
+                case, created = Case.objects.get_or_create(id=case_id)
+
+                # Create the activity
+                Activity.objects.create(case=case, timestamp=timestamp, name=name, case_index=case_index)
+
+
     def add_TPT(self):
         index_list = Activity.objects.values_list('case_index', flat=True).distinct()
         for index in index_list:
@@ -165,8 +207,13 @@ class Command(BaseCommand):
         Handle the command to add data to the database from the CSV file.
         """
         self.create_cases()
+        self.create_more_cases(290)
+        self.create_more_cases(580)
+        self.create_more_cases(870)
         self.create_activities()
+        self.create_more_activities(290)
+        self.create_more_activities(580)
+        self.create_more_activities(870)
         self.create_variants()
         self.add_TPT()
-
         self.stdout.write(self.style.SUCCESS('Data added successfully'))
