@@ -35,6 +35,18 @@ class ActivitySerializer(serializers.ModelSerializer):
         fields =  ['id','case', 'timestamp', 'name', 'case_index', 'tpt']	
 
 class VariantSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Variant model.
+    This serializer converts Variant model instances into JSON format and vice versa.
+    It includes the following fields:
+    - id: The unique identifier for the variant.
+    - activities: The activities associated with the variant.
+    - cases: The cases related to the variant.
+    - number_cases: The number of cases for the variant.
+    - percentage: The percentage representation of the variant.
+    - avg_time: The average time associated with the variant.
+    """
+
     class Meta:
         model = Variant
         fields = ['id', 'activities', 'cases', 'number_cases', 'percentage', 'avg_time']

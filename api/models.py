@@ -11,6 +11,13 @@ class Case(models.Model):
     """
     id = models.AutoField(primary_key=True)
     avg_time = models.FloatField(default=0)
+    type = models.CharField(max_length=25, default='None')
+    barnch = models.CharField(max_length=25, default='None')
+    ramo = models.CharField(max_length=25, default='None')
+    brocker = models.CharField(max_length=25, default='None')
+    state = models.CharField(max_length=25, default='None')
+    client = models.CharField(max_length=25, default='None')
+    creator = models.CharField(max_length=25, default='None')
 
     def __str__(self):
         return f"Case {self.id}"
@@ -29,7 +36,7 @@ class Activity(models.Model):
     id = models.AutoField(primary_key=True)
     case = models.ForeignKey(Case, related_name='activities', on_delete=models.CASCADE)
     timestamp = models.DateTimeField()
-    name = models.CharField(max_length=25, choices=ACTIVITY_CHOICES)
+    name = models.CharField(max_length=25)
     case_index = models.IntegerField(default=0)
     tpt = models.FloatField(default=0)
 
