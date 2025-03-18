@@ -43,3 +43,39 @@ NAMES = [
     "Victoria", "Vincent", "Virginia", "Vivian", "Walter", "Wanda", "Wayne", "Wendy", "Wesley", "Whitney",
     "William", "Willie", "Wyatt", "Xavier", "Yolanda", "Yvonne", "Zachary", "Zoe"
 ]
+
+RAMOS = [
+    "Home Insurance",
+    "Fire Insurance",
+    "Life Insurance",
+    "Health Insurance",
+    "Auto Insurance",
+    "Travel Insurance",
+    "Pet Insurance",
+    "Business Insurance",
+    "Renters Insurance",
+    "Flood Insurance",
+    "Earthquake Insurance",
+    "Disability Insurance",
+    "Liability Insurance",
+    "Workers' Compensation Insurance",
+    "Cyber Insurance",
+    "Marine Insurance",
+    "Aviation Insurance",
+    "Crop Insurance",
+    "Title Insurance",
+    "Burial Insurance"
+]
+
+BRANCHES = [
+    "Branch 1",
+    "Branch 2",
+    "Branch 3",
+    "Branch 4",
+    "Branch 5",
+    "Branch 6",
+    "Branch 7",
+    "Branch 8",
+    "Branch 9",
+    "Branch 10"
+]

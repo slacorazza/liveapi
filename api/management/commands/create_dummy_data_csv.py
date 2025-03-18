@@ -7,7 +7,7 @@ from datetime import datetime
 from collections import defaultdict
 import random
 from datetime import timedelta
-from ..constants import NAMES
+from ..constants import NAMES, RAMOS, BRANCHES
 import json
 
 
@@ -64,7 +64,7 @@ class Command(BaseCommand):
         case_type = random.choice(['Renewal', 'Issuance', 'Policy onboarding'])
         case_id = self.new_case_id()
         initial_timestamp = datetime(2024, 1, 1, 12, 0, 0) + timedelta(days=random.randint(1, 435), hours=random.randint(1, 24), minutes=random.randint(1, 60), seconds=random.randint(1, 60))
-        case = self.Case(case_id, case_type, initial_timestamp, branch=random.choice('North, South, East, West'), ramo='Ramo', brocker=random.choice(NAMES), state = 'State', client =random.choice(NAMES), creator = random.choice(NAMES))
+        case = self.Case(case_id, case_type, initial_timestamp, branch=random.choice(BRANCHES), ramo=random.choice(RAMOS), brocker=random.choice(NAMES), state = 'Start', client =random.choice(NAMES), creator = random.choice(NAMES))
         print( 'create Case=', case_id)
         Case.objects.create(id=case.case_id, type=case.type, avg_time=0, barnch=case.branch, ramo=case.ramo, brocker=case.brocker, state=case.state, client=case.client, creator=case.creator)
         if case_type == 'Policy onboarding':
@@ -103,17 +103,20 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Registrar PO'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         
         rand_num = random.randint(1, 100)
-        if rand_num <= 50:
+        if rand_num <= 10:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Devolucion al brocker del caso (Revision Brocker)'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             self.registrar_PO(case)
         else:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Enviar a emision'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             self.revision_emision(case)
 
@@ -128,10 +131,11 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Registro de compromiso'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
-        self.revision_suscripcion(case)
+        self.enviar_revision_suscripcion(case)
     
-    def revision_suscripcion(self, case: Case):
+    def enviar_revision_suscripcion(self, case: Case):
         """
         Add a subscription review to the database.
 
@@ -142,12 +146,13 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Enviar a Revisión suscripción'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         rand_num = random.randint(1, 100)
         if rand_num <= 50:
             self.validar_info_enviada(case)
         else:
-            self.revision_suscripcion2(case)
+            self.revision_suscripcion(case)
     
     def validar_info_enviada(self, case: Case):
         """
@@ -160,17 +165,18 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Validar info enviada'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         rand_num = random.randint(1, 100)
-        if rand_num <= 50:
+        if rand_num <= 10:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Devolver caso a Comercial'
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             self.revision_suscripcion(case)
         else:
-            self.revision_suscripcion2(case)
+            self.revision_suscripcion(case)
     
-    def revision_suscripcion2(self, case: Case):
+    def revision_suscripcion(self, case: Case):
         """
         Add a subscription review to the database.
 
@@ -181,21 +187,25 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Enviar a Revisión suscripción'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         rand_num = random.randint(1, 100)
-        if rand_num <= 50:
+        if rand_num <= 10:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Realizar devolucion desde suscripcion'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
-            self.revision_suscripcion(case)
-        elif rand_num <= 75:
+            self.enviar_revision_suscripcion(case)
+        elif rand_num <= 50:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Reasignacion a suscriptor de mayor nivel'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         
-        elif rand_num <= 90:
+        elif rand_num <= 75:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Declinar solicitud en suscripcion'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         else:
             self.aprobar_suscripcion_local(case)
@@ -211,20 +221,24 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Aprobar solicitud en suscripcion local'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Enviar respuesta al area comercial'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         
         rand_num = random.randint(1, 100)
         if rand_num <= 33:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Rechazar (perdida) por parte del Brocker'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)   
         elif rand_num <= 66:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Declinar por parte del Brocker'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         else:
             self.aceptar_brocker(case)
@@ -240,6 +254,7 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Aceptar (ganado) por parte del Brocker'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         
         self.visado(case)
@@ -255,12 +270,14 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Visado'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         
         rand_num = random.randint(1, 100)
-        if rand_num <= 50:
+        if rand_num <= 10:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Devolucion a comercial desde visado'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             self.visado(case)
         else:
@@ -278,25 +295,30 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Revisión en emisión'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         rand_num = random.randint(1, 100)
-        if rand_num <= 25:
+        if rand_num <= 10:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Devolucion a comercial desde emisión'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             self.revision_emision(case)
-        elif rand_num <= 50:
+        elif rand_num <= 20:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Devolucion a visado desde emisión'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             self.visado(case)
-        elif rand_num <= 75:
+        elif rand_num <= 50:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Control de calidad documental'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Devolucion a emision de control de calidad'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             self.iniciar_facturacion(case)
         else:
@@ -313,34 +335,42 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Iniciar facturación'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Generar Factura'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Contabilizar Factura'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
 
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Generar poliza'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
 
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Enviar factura electronica'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
 
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Respuesta SRI'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
 
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Enviar poliza electronica'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
 
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Firma poliza electronica por parte del cliente'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
 
         self.finalizar_poliza_factura_cliente(case)
@@ -356,27 +386,32 @@ class Command(BaseCommand):
         """
         case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
         activity = 'Finalizar envio poliza y factura al cliente'
+        case.state = activity
         self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
 
         rand_num = random.randint(1, 100)
 
-        if rand_num <= 33:
+        if rand_num <= 80:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Finalizar proceso de emision'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
 
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Recepcion pago'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
         
-        elif rand_num <= 66:
+        elif rand_num <= 90:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Devolucion a emision'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             self.finalizar_poliza_factura_cliente(case)
         else:
             case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
             activity = 'Devolucion a comercial (corregir informacion)'
+            case.state = activity
             self.write_in_file(case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator)
             self.finalizar_poliza_factura_cliente(case)
 
@@ -487,14 +522,14 @@ class Command(BaseCommand):
         Handle the command to add data to the database from the CSV file.
         """
 
-        # for i in range(1000):
-        #     self.start()
-        #     if i % 100 == 0:
-        #         self.stdout.write(self.style.SUCCESS(str(i) + 'instances added successfully'))
-        # self.stdout.write(self.style.SUCCESS('Creating variants'))
-        # self.create_variants()
-        # self.stdout.write(self.style.SUCCESS('Adding TPT'))
-        # self.add_TPT()
-        # self.stdout.write(self.style.SUCCESS('Data added successfully'))
+        for i in range(1000):
+            self.start()
+            if i % 100 == 0:
+                self.stdout.write(self.style.SUCCESS(str(i) + 'instances added successfully'))
+        self.stdout.write(self.style.SUCCESS('Creating variants'))
+        self.create_variants()
+        self.stdout.write(self.style.SUCCESS('Adding TPT'))
+        self.add_TPT()
+        self.stdout.write(self.style.SUCCESS('Data added successfully'))
 
         self.get_mean_time_per_activity(self.get_case_activity_time())

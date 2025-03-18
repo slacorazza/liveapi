@@ -58,7 +58,7 @@ class ActivityList(APIView):
             case_ids = request.query_params.getlist('case')
             names = request.query_params.getlist('name')
             case_index = request.query_params.get('case_index')
-            page_size = request.query_params.get('page_size', 10)  # Default page size is 10 if not provided
+            page_size = request.query_params.get('page_size', 100000)  # Default page size is 10 if not provided
             activities = Activity.objects.all()
             if case_index:
                 activities = activities.filter(case_index=case_index)
@@ -121,16 +121,18 @@ class VariantList(APIView):
             Response: The paginated list of variants.
         """
         activities_param = request.query_params.getlist('activities')
+        page_size = request.query_params.get('page_size', 100000)  # Default page size is 10 if not provided
         variants = Variant.objects.all()
         if activities_param:
             for param in activities_param:
                 variants = variants.filter(activities__icontains=param)
                 
-        variants = variants.order_by('percentage').reverse()
+        variants = variants.order_by('-percentage')
         
         paginator = PageNumberPagination()
-        paginated_activities = paginator.paginate_queryset(variants, request)
-        serializer = VariantSerializer(paginated_activities, many=True)
+        paginator.page_size = page_size
+        paginated_variants = paginator.paginate_queryset(variants, request)
+        serializer = VariantSerializer(paginated_variants, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 class KPIList(APIView):
@@ -150,18 +152,18 @@ class KPIList(APIView):
         """
         kpi_data = {
     "Registro de compromiso": 1825.86,
-    "Enviar a Revisi\u00f3n suscripci\u00f3n": 1842.504892367906,
+    "Enviar a Revision suscripcion": 1842.504892367906,
     "Realizar devolucion desde suscripcion": 1880.6577595066803,
     "Validar info enviada": 1829.5865237366004,
     "Devolver caso a Comercial": 1790.7197549770292,
     "Ingresar tramite": 1830.4761904761904,
     "Registrar PO": 1779.9347471451877,
     "Enviar a emision": 1903.4285714285713,
-    "Revisi\u00f3n en emisi\u00f3n": 1802.7457627118645,
-    "Devolucion a comercial desde emisi\u00f3n": 1759.109589041096,
+    "Revision en emision": 1802.7457627118645,
+    "Devolucion a comercial desde emision": 1759.109589041096,
     "Control de calidad documental": 1816.7763157894738,
     "Devolucion a emision de control de calidad": 1851.5131578947369,
-    "Iniciar facturaci\u00f3n": 1836.0207612456747,
+    "Iniciar facturacion": 1836.0207612456747,
     "Generar Factura": 1795.9515570934257,
     "Contabilizar Factura": 1805.2941176470588,
     "Generar poliza": 1840.795847750865,
@@ -180,7 +182,7 @@ class KPIList(APIView):
     "Devolucion a comercial (corregir informacion)": 1855.686274509804,
     "Devolucion a comercial desde visado": 1856.819012797075,
     "Devolucion al brocker del caso (Revision Brocker)": 1788.523489932886,
-    "Devolucion a visado desde emisi\u00f3n": 2013.2903225806451
+    "Devolucion a visado desde emision": 2013.2903225806451
 }
 
         formatted_kpi_data = [{"name": name, "avg_time": mean_time} for name, mean_time in kpi_data.items()]
