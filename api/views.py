@@ -101,6 +101,7 @@ class DistinctActivityData(APIView):
                 {'name': 'state', 'type': 'str', 'distincts': []},  # Assuming no distinct values for state
                 {'name': 'client', 'type': 'str', 'distincts': distinct_clients},
                 {'name': 'creator', 'type': 'str', 'distincts': distinct_creators},
+                {'name': 'value', 'type': 'number', 'distincts': []}  # Assuming no distinct values for
             ]
 
             return Response({
