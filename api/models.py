@@ -12,7 +12,7 @@ class Case(models.Model):
     id = models.AutoField(primary_key=True)
     avg_time = models.FloatField(default=0)
     type = models.CharField(max_length=25, default='None')
-    barnch = models.CharField(max_length=25, default='None')
+    branch = models.CharField(max_length=25, default='None')
     ramo = models.CharField(max_length=25, default='None')
     brocker = models.CharField(max_length=25, default='None')
     state = models.CharField(max_length=25, default='None')

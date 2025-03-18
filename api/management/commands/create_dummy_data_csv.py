@@ -9,7 +9,7 @@ import random
 from datetime import timedelta
 from ..constants import NAMES, RAMOS, BRANCHES
 import json
-
+from django.utils import timezone
 
 class Command(BaseCommand):
     """
@@ -34,7 +34,7 @@ class Command(BaseCommand):
     def new_case_id(self):
         case_id = random.randint(1, 10000)
         while case_id in self.cases_ids:
-            case_id = random.randint(1, 100)
+            case_id = random.randint(1, 10000)
         self.cases_ids.append(case_id)
         return case_id
     
@@ -55,18 +55,18 @@ class Command(BaseCommand):
                 writer.writerow(['Case ID', 'Activity', 'Timestamp', 'Case Type', 'Branch', 'Ramo', 'Brocker', 'Client', 'Creator'])
             writer.writerow([case_id, activity, timestamp, case_type, case_branch, case_ramo, case_brocker, case_client, case_creator])
         
-        print('Look for case_id=', case_id)
+
         case = Case.objects.get(id=case_id)
-        print('Create activity=', activity)
+
         Activity.objects.create(case = case, name=activity, timestamp=timestamp, case_index=case_id)
 
     def start(self):
         case_type = random.choice(['Renewal', 'Issuance', 'Policy onboarding'])
         case_id = self.new_case_id()
-        initial_timestamp = datetime(2024, 1, 1, 12, 0, 0) + timedelta(days=random.randint(1, 435), hours=random.randint(1, 24), minutes=random.randint(1, 60), seconds=random.randint(1, 60))
+        initial_timestamp = timezone.make_aware(datetime(2024, 1, 1, 12, 0, 0) + timedelta(days=random.randint(1, 435), hours=random.randint(1, 24), minutes=random.randint(1, 60), seconds=random.randint(1, 60)))
         case = self.Case(case_id, case_type, initial_timestamp, branch=random.choice(BRANCHES), ramo=random.choice(RAMOS), brocker=random.choice(NAMES), state = 'Start', client =random.choice(NAMES), creator = random.choice(NAMES))
-        print( 'create Case=', case_id)
-        Case.objects.create(id=case.case_id, type=case.type, avg_time=0, barnch=case.branch, ramo=case.ramo, brocker=case.brocker, state=case.state, client=case.client, creator=case.creator)
+        print( len(self.cases_ids))
+        Case.objects.create(id=case.case_id, type=case.type, avg_time=0, branch=case.branch, ramo=case.ramo, brocker=case.brocker, state=case.state, client=case.client, creator=case.creator)
         if case_type == 'Policy onboarding':
             self.ingresar_tramite(case)
         elif case_type == 'Renewal':
