@@ -13,6 +13,18 @@ class CaseListCreate(generics.ListCreateAPIView):
     """
     queryset = Case.objects.all()
     serializer_class = CaseSerializer
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        """
+        Optionally restricts the returned cases to a given page size,
+        by filtering against a `page_size` query parameter in the URL.
+        """
+        queryset = super().get_queryset()
+        page_size = self.request.query_params.get('page_size')
+        if page_size:
+            self.pagination_class.page_size = int(page_size)
+        return queryset
 
 # View for listing and creating Activity objects
 class activityListCreate(generics.ListCreateAPIView):
@@ -173,27 +185,35 @@ class VariantList(APIView):
         paginated_variants = paginator.paginate_queryset(variants, request)
         serializer = VariantSerializer(paginated_variants, many=True)
         return paginator.get_paginated_response(serializer.data)
-
+    
 class BillList(APIView):
     def get(self, request, format=None):
         """
-        Handle GET request to list all Bills."
+        Handle GET request to list all Bills.
         """
         try:
+            page_size = request.query_params.get('page_size', 100000)
             bills = Bill.objects.all()
-            serializer = BillSerializer(bills, many=True)
-            return Response(serializer.data)
+            paginator = PageNumberPagination()
+            paginator.page_size = page_size
+            paginated_bills = paginator.paginate_queryset(bills, request)
+            serializer = BillSerializer(paginated_bills, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
         
 class ReworkList(APIView):
     def get(self, request, format=None):
         """
-        Handle GET request to list all Reworks."
+        Handle GET request to list all Reworks.
         """
         try:
+            page_size = request.query_params.get('page_size', 100000)
             reworks = Rework.objects.all()
-            serializer = ReworkSerializer(reworks, many=True)
-            return Response(serializer.data)
+            paginator = PageNumberPagination()
+            paginator.page_size = page_size
+            paginated_reworks = paginator.paginate_queryset(reworks, request)
+            serializer = ReworkSerializer(paginated_reworks, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as e:
             return Response({'error': str(e)}, status=500)

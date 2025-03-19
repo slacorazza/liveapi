@@ -99,6 +99,7 @@ class Rework(models.Model):
     id = models.AutoField(primary_key=True)
     activity = models.ForeignKey(Activity, related_name='reworks', on_delete=models.CASCADE)
     cost = models.IntegerField(default=0)
+    target = models.CharField(max_length=250, default='None')
 
     def __str__(self):
         return f"{self.case.id} - {self.value} at {self.timestamp}"

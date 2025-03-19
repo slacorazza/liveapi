@@ -79,5 +79,5 @@ class ReworkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Rework
-        fields = ['id', 'activity', 'case', 'cost']
+        fields = ['id', 'activity', 'case', 'cost', 'target']
 

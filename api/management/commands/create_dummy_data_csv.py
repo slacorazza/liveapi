@@ -119,7 +119,7 @@ class Command(BaseCommand):
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost)
+            Rework.objects.create(activity=activity, cost = cost, target= 'Registrar PO')
             
             self.registrar_PO(case)
         else:
@@ -173,7 +173,7 @@ class Command(BaseCommand):
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost)
+            Rework.objects.create(activity=activity, cost = cost, target = 'Enviar a Revisión suscripción')
 
             self.enviar_revision_suscripcion(case)
         else:
@@ -198,7 +198,7 @@ class Command(BaseCommand):
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost)
+            Rework.objects.create(activity=activity, cost = cost, target = 'Enviar a Revisión suscripción')
 
             self.enviar_revision_suscripcion(case)
         elif rand_num <= 50:
@@ -262,7 +262,7 @@ class Command(BaseCommand):
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost)
+            Rework.objects.create(activity=activity, cost = cost, target = 'Visado')
 
             self.visado(case)
         else:
@@ -288,7 +288,7 @@ class Command(BaseCommand):
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost)
+            Rework.objects.create(activity=activity, cost = cost, target = 'Revisión en emisión')
 
             self.revision_emision(case)
         elif rand_num <= 20:
@@ -299,7 +299,7 @@ class Command(BaseCommand):
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost)
+            Rework.objects.create(activity=activity, cost = cost, target = 'Visado')
 
             self.visado(case)
         elif rand_num <= 50:
@@ -359,7 +359,7 @@ class Command(BaseCommand):
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost)
+            Rework.objects.create(activity=activity, cost = cost, target = 'Finalizar envio poliza y factura al cliente')
 
             self.finalizar_poliza_factura_cliente(case)
         else:
@@ -370,7 +370,7 @@ class Command(BaseCommand):
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost)
+            Rework.objects.create(activity=activity, cost = cost, target = 'Finalizar envio poliza y factura al cliente')
 
             self.finalizar_poliza_factura_cliente(case)
 
