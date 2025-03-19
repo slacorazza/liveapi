@@ -1,6 +1,6 @@
 import csv
 from django.core.management.base import BaseCommand
-from api.models import Case, Activity, Variant
+from api.models import Case, Activity, Variant, Bill, Rework
 from django.conf import settings
 import os
 from datetime import datetime
@@ -18,7 +18,7 @@ class Command(BaseCommand):
     help = 'Add data to the database from CSV file'
     
     class Case:
-        def __init__(self, case_id, case_type, last_timestamp, branch, ramo, brocker, state, client, creator, value):
+        def __init__(self, case_id, case_type, last_timestamp, branch, ramo, brocker, state, client, creator, value, insurance):
             self.case_id = case_id
             self.type = case_type
             self.last_timestamp = last_timestamp
@@ -29,6 +29,7 @@ class Command(BaseCommand):
             self.client = client
             self.creator = creator
             self.value = value
+            self.insurance = insurance
 
     cases_ids = []
 
@@ -53,22 +54,29 @@ class Command(BaseCommand):
         with open('data.csv', mode='a', newline='') as file:
             writer = csv.writer(file)
             if not file_exists:
-                writer.writerow(['Case ID', 'Activity', 'Timestamp', 'Case Type', 'Branch', 'Ramo', 'Brocker', 'Client', 'Creator', 'Value'])
-            writer.writerow([case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator, case.value])
+                writer.writerow(['Case ID', 'Activity', 'Timestamp', 'Case Type', 'Branch', 'Ramo', 'Brocker', 'Client', 'Creator', 'Value', 'Insurance', 'State'])
+            writer.writerow([case.case_id, activity, case.last_timestamp, case.type, case.branch, case.ramo, case.brocker, case.client, case.creator, case.value, case.insurance, case.state])
         
 
         case2 = Case.objects.get(id=case.case_id)
 
         Activity.objects.create(case = case2, name=activity, timestamp=case.last_timestamp, case_index=case.case_id)
 
+    def update_case(self, case: Case, activity):
+        case.last_timestamp +=  timedelta(hours=random.expovariate(1/12))
+        case.state = activity
+        self.write_in_file(case, activity)
+
     def start(self):
         case_type = random.choice(['Renewal', 'Issuance', 'Policy onboarding'])
         case_id = self.new_case_id()
-        initial_timestamp = timezone.make_aware(datetime(2024, 1, 1, 12, 0, 0) + timedelta(days=random.randint(1, 435), hours=random.randint(1, 24), minutes=random.randint(1, 60), seconds=random.randint(1, 60)))
+        initial_timestamp = timezone.make_aware(datetime(2025, 1, 1, 12, 0, 0) + timedelta(days=random.randint(1, 76), hours=random.randint(1, 24), minutes=random.randint(1, 60), seconds=random.randint(1, 60)))
         value = random.randint(10, 100)*100
-        case = self.Case(case_id, case_type, initial_timestamp, branch=random.choice(BRANCHES), ramo=random.choice(RAMOS), brocker=random.choice(NAMES), state = 'Start', client =random.choice(NAMES), creator = random.choice(NAMES), value=value)
-        print( len(self.cases_ids))
-        Case.objects.create(id=case.case_id, type=case.type, avg_time=0, branch=case.branch, ramo=case.ramo, brocker=case.brocker, state=case.state, client=case.client, creator=case.creator)
+        insurance = f"{random.randint(1, 100000):06d}"
+        case = self.Case(case_id, case_type, initial_timestamp, branch=random.choice(BRANCHES), ramo=random.choice(RAMOS), brocker=random.choice(NAMES), state = 'Start', client =random.choice(NAMES), creator = random.choice(NAMES), value=value, insurance=insurance)
+
+
+        Case.objects.create(id=case.case_id, type=case.type, avg_time=0, branch=case.branch, ramo=case.ramo, brocker=case.brocker, state=case.state, client=case.client, creator=case.creator, value=case.value, insurance=insurance)
         if case_type == 'Policy onboarding':
             self.ingresar_tramite(case)
         elif case_type == 'Renewal':
@@ -87,10 +95,7 @@ class Command(BaseCommand):
             initial_timestamp (datetime): The initial timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Ingresar tramite'
-        case.state = activity
-        self.write_in_file(case, activity)
+        self.update_case(case, 'Ingresar tramite')
         
         self.registrar_PO(case)
     
@@ -103,23 +108,22 @@ class Command(BaseCommand):
             initial_timestamp (datetime): The initial timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Registrar PO'
-        case.state = activity
-        self.write_in_file(case, activity)
+        self.update_case(case, 'Registrar PO')
         
         rand_num = random.randint(1, 100)
         if rand_num <= 10:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Devolucion al brocker del caso (Revision Brocker)'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Devolucion al brocker del caso (Revision Brocker)')
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name = 'Registrar PO').first()
+            if return_activity:
+                cost = (activity.timestamp - return_activity.timestamp).total_seconds()
+            else:
+                cost = 0
+            Rework.objects.create(activity=activity, cost = cost)
+            
             self.registrar_PO(case)
         else:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Enviar a emision'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Enviar a emision')
             self.revision_emision(case)
 
     def registro_de_compromiso(self, case: Case):
@@ -131,10 +135,7 @@ class Command(BaseCommand):
             initial_timestamp (datetime): The initial timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Registro de compromiso'
-        case.state = activity
-        self.write_in_file(case, activity)
+        self.update_case(case, 'Registro de compromiso')
         self.enviar_revision_suscripcion(case)
     
     def enviar_revision_suscripcion(self, case: Case):
@@ -146,10 +147,7 @@ class Command(BaseCommand):
             timestamp (datetime): The timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Enviar a Revisión suscripción'
-        case.state = activity
-        self.write_in_file(case, activity)
+        self.update_case(case, 'Enviar a Revisión suscripción')
         rand_num = random.randint(1, 100)
         if rand_num <= 50:
             self.validar_info_enviada(case)
@@ -165,16 +163,19 @@ class Command(BaseCommand):
             timestamp (datetime): The timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Validar info enviada'
-        case.state = activity
-        self.write_in_file(case, activity)
+        self.update_case(case, 'Validar info enviada')
         rand_num = random.randint(1, 100)
         if rand_num <= 10:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Devolver caso a Comercial'
-            self.write_in_file(case, activity)
-            self.revision_suscripcion(case)
+            self.update_case(case, 'Devolver caso a Comercial')
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name = 'Enviar a Revisión suscripción').first()
+            if return_activity:
+                cost = (activity.timestamp - return_activity.timestamp).total_seconds()
+            else:
+                cost = 0
+            Rework.objects.create(activity=activity, cost = cost)
+
+            self.enviar_revision_suscripcion(case)
         else:
             self.revision_suscripcion(case)
     
@@ -187,28 +188,25 @@ class Command(BaseCommand):
             timestamp (datetime): The timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Enviar a Revisión suscripción'
-        case.state = activity
-        self.write_in_file(case, activity)
-        rand_num = random.randint(1, 100)
+        self.update_case(case, 'Revisión en suscripción')
+        rand_num = random.randint(1, 50)
         if rand_num <= 10:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Realizar devolucion desde suscripcion'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Realizar devolucion desde suscripcion')
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name = 'Enviar a Revisión suscripción').first()
+            if return_activity:
+                cost = (activity.timestamp - return_activity.timestamp).total_seconds()
+            else:
+                cost = 0
+            Rework.objects.create(activity=activity, cost = cost)
+
             self.enviar_revision_suscripcion(case)
         elif rand_num <= 50:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Reasignacion a suscriptor de mayor nivel'
-            case.state = activity
-            self.write_in_file(case, activity)
-        
-        elif rand_num <= 75:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Declinar solicitud en suscripcion'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Enviar a suscripcion local')
+            
+        rand_num = random.randint(1, 100)
+        if rand_num <= 10:
+            self.update_case(case, 'Declinar solicitud en suscripcion')
         else:
             self.aprobar_suscripcion_local(case)
 
@@ -221,27 +219,14 @@ class Command(BaseCommand):
             timestamp (datetime): The timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Aprobar solicitud en suscripcion local'
-        case.state = activity
-        self.write_in_file(case, activity)
-        
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Enviar respuesta al area comercial'
-        case.state = activity
-        self.write_in_file(case, activity)
+        self.update_case(case, 'Aprobar solicitud en suscripcion local')
+        self.update_case(case, 'Enviar respuesta al area comercial')
         
         rand_num = random.randint(1, 100)
         if rand_num <= 33:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Rechazar (perdida) por parte del Brocker'
-            case.state = activity
-            self.write_in_file(case, activity)   
+            self.update_case(case, 'Rechazar (perdida) por parte del Brocker')
         elif rand_num <= 66:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Declinar por parte del Brocker'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Declinar por parte del Brocker')
         else:
             self.aceptar_brocker(case)
 
@@ -254,11 +239,7 @@ class Command(BaseCommand):
             timestamp (datetime): The timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Aceptar (ganado) por parte del Brocker'
-        case.state = activity
-        self.write_in_file(case, activity)
-        
+        self.update_case(case, 'Aceptar (ganado) por parte del Brocker')
         self.visado(case)
 
     def visado(self, case: Case):
@@ -270,17 +251,19 @@ class Command(BaseCommand):
             timestamp (datetime): The timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Visado'
-        case.state = activity
-        self.write_in_file(case, activity)
+        self.update_case(case, 'Visado')
         
         rand_num = random.randint(1, 100)
         if rand_num <= 10:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Devolucion a comercial desde visado'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Devolucion a comercial desde visado')
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Visado').first()
+            if return_activity:
+                cost = (activity.timestamp - return_activity.timestamp).total_seconds()
+            else:
+                cost = 0
+            Rework.objects.create(activity=activity, cost = cost)
+
             self.visado(case)
         else:
             self.revision_emision(case)
@@ -295,33 +278,33 @@ class Command(BaseCommand):
             timestamp (datetime): The timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Revisión en emisión'
-        case.state = activity
-        self.write_in_file(case, activity)
+        self.update_case(case, 'Revisión en emisión')
         rand_num = random.randint(1, 100)
         if rand_num <= 10:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Devolucion a comercial desde emisión'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Devolucion a comercial desde emisión')
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Revisión en emisión').first()
+            if return_activity:
+                cost = (activity.timestamp - return_activity.timestamp).total_seconds()
+            else:
+                cost = 0
+            Rework.objects.create(activity=activity, cost = cost)
+
             self.revision_emision(case)
         elif rand_num <= 20:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Devolucion a visado desde emisión'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Devolucion a visado desde emisión')
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Visado').first()
+            if return_activity:
+                cost = (activity.timestamp - return_activity.timestamp).total_seconds()
+            else:
+                cost = 0
+            Rework.objects.create(activity=activity, cost = cost)
+
             self.visado(case)
         elif rand_num <= 50:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Control de calidad documental'
-            case.state = activity
-            self.write_in_file(case, activity)
-            
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Devolucion a emision de control de calidad'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Control de calidad documental')
+            self.update_case(case, 'Devolucion a emision de control de calidad')
             self.iniciar_facturacion(case)
         else:
             self.iniciar_facturacion(case)
@@ -335,46 +318,19 @@ class Command(BaseCommand):
             timestamp (datetime): The timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Iniciar facturación'
-        case.state = activity
-        self.write_in_file(case, activity)
-        
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Generar Factura'
-        case.state = activity
-        self.write_in_file(case, activity)
-        
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Contabilizar Factura'
-        case.state = activity
-        self.write_in_file(case, activity)
-
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Generar poliza'
-        case.state = activity
-        self.write_in_file(case, activity)
-
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Enviar factura electronica'
-        case.state = activity
-        self.write_in_file(case, activity)
-
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Respuesta SRI'
-        case.state = activity
-        self.write_in_file(case, activity)
-
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Enviar poliza electronica'
-        case.state = activity
-        self.write_in_file(case, activity)
-
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Firma poliza electronica por parte del cliente'
-        case.state = activity
-        self.write_in_file(case, activity)
-
+        self.update_case(case, 'Iniciar facturación')
+        self.update_case(case, 'Generar Factura')
+        # create a bill for every month from the last timestamp to today
+        last_timestamp = case.last_timestamp
+        while last_timestamp < timezone.now():
+            Bill.objects.create(case=Case.objects.get(id=case.case_id), value=case.value, timestamp=last_timestamp)
+            last_timestamp += timedelta(days=30)
+        self.update_case(case, 'Contabilizar Factura')
+        self.update_case(case, 'Generar poliza')
+        self.update_case(case, 'Enviar factura electronica')
+        self.update_case(case, 'Respuesta SRI')
+        self.update_case(case, 'Enviar poliza electronica')
+        self.update_case(case, 'Firma poliza electronica por parte del cliente')
         self.finalizar_poliza_factura_cliente(case)
 
     def finalizar_poliza_factura_cliente(self, case: Case):
@@ -386,35 +342,36 @@ class Command(BaseCommand):
             timestamp (datetime): The timestamp.
             case_type (str): The type of the case.
         """
-        case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-        activity = 'Finalizar envio poliza y factura al cliente'
-        case.state = activity
-        self.write_in_file(case, activity)
+        self.update_case(case, 'Finalizar envio poliza y factura al cliente')
 
         rand_num = random.randint(1, 100)
 
         if rand_num <= 80:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Finalizar proceso de emision'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Finalizar proceso de emision')
+            self.update_case(case, 'Recepcion pago')
 
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Recepcion pago'
-            case.state = activity
-            self.write_in_file(case, activity)
         
         elif rand_num <= 90:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Devolucion a emision'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Devolucion a emision (corregir informacion)')
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Finalizar envio poliza y factura al cliente').first()
+            if return_activity:
+                cost = (activity.timestamp - return_activity.timestamp).total_seconds()
+            else:
+                cost = 0
+            Rework.objects.create(activity=activity, cost = cost)
+
             self.finalizar_poliza_factura_cliente(case)
         else:
-            case.last_timestamp +=  timedelta(minutes=random.randint(1, 60))
-            activity = 'Devolucion a comercial (corregir informacion)'
-            case.state = activity
-            self.write_in_file(case, activity)
+            self.update_case(case, 'Devolucion a comercial (corregir informacion)')
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Finalizar envio poliza y factura al cliente').first()
+            if return_activity:
+                cost = (activity.timestamp - return_activity.timestamp).total_seconds()
+            else:
+                cost = 0
+            Rework.objects.create(activity=activity, cost = cost)
+
             self.finalizar_poliza_factura_cliente(case)
 
 
@@ -519,6 +476,14 @@ class Command(BaseCommand):
         print(mean_time_per_activity_json)
         return mean_time_per_activity_json
     
+    def add_time_to_cases(self):
+        cases = Case.objects.all()
+        for case in cases:
+            activities = Activity.objects.filter(case=case).order_by('timestamp')
+            last_activity = activities.last()
+            first_activity = activities.first()
+            case.avg_time = (last_activity.timestamp - first_activity.timestamp).total_seconds()
+            case.save()
     def handle(self, *args, **kwargs):
         """
         Handle the command to add data to the database from the CSV file.
@@ -528,6 +493,8 @@ class Command(BaseCommand):
             self.start()
             if i % 100 == 0:
                 self.stdout.write(self.style.SUCCESS(str(i) + 'instances added successfully'))
+        self.stdout.write(self.style.SUCCESS('Adding time to cases'))
+        self.add_time_to_cases()
         self.stdout.write(self.style.SUCCESS('Creating variants'))
         self.create_variants()
         self.stdout.write(self.style.SUCCESS('Adding TPT'))

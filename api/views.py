@@ -1,10 +1,10 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Case, Activity, Variant
-from .serializers import CaseSerializer, ActivitySerializer, VariantSerializer
+from .models import Case, Activity, Variant, Bill, Rework
+from .serializers import CaseSerializer, ActivitySerializer, VariantSerializer, BillSerializer, ReworkSerializer
 from rest_framework.pagination import PageNumberPagination
-from collections import defaultdict
+
 
 # View for listing and creating Case objects
 class CaseListCreate(generics.ListCreateAPIView):
@@ -44,7 +44,16 @@ class ActivityList(APIView):
             case_ids = request.query_params.getlist('case')
             names = request.query_params.getlist('name')
             case_index = request.query_params.get('case_index')
-            page_size = request.query_params.get('page_size', 100000)  # Default page size is 10 if not provided
+            page_size = request.query_params.get('page_size', 100000)
+            type = request.query_params.get('type')
+            branch = request.query_params.get('branch')
+            ramo = request.query_params.get('ramo')
+            brocker = request.query_params.get('brocker')
+            state = request.query_params.get('state')
+            client = request.query_params.get('client')
+            creator = request.query_params.get('creator')
+            variant_ids = request.query_params.getlist('var')
+
             activities = Activity.objects.all()
             if case_index:
                 activities = activities.filter(case_index=case_index)
@@ -52,6 +61,30 @@ class ActivityList(APIView):
                 activities = activities.filter(case__id__in=case_ids)
             if names:
                 activities = activities.filter(name__in=names)
+            if type:
+                activities = activities.filter(case__type=type)
+            if branch:
+                activities = activities.filter(case__branch=branch)
+            if ramo:
+                activities = activities.filter(case__ramo=ramo)
+            if brocker:
+                activities = activities.filter(case__brocker=brocker)
+            if state:
+                activities = activities.filter(case__state=state)
+            if client:
+                activities = activities.filter(case__client=client)
+            if creator:
+                activities = activities.filter(case__creator=creator)
+            if variant_ids:
+                print(variant_ids)
+                variants = Variant.objects.filter(id__in=variant_ids)
+
+                if variants:
+                    case_ids = set()
+                    for variant in variants:
+                        case_ids.update({case_id.strip().replace("'", "") for case_id in variant.cases[1:-1].split(',')})
+                        
+                    activities = activities.filter(case__id__in=case_ids)
 
             activities = activities.order_by('timestamp')
 
@@ -59,9 +92,11 @@ class ActivityList(APIView):
             paginator.page_size = page_size
             paginated_activities = paginator.paginate_queryset(activities, request)
             serializer = ActivitySerializer(paginated_activities, many=True)
+
             return paginator.get_paginated_response(serializer.data)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+
 
 # View for listing all distinct activity names and case IDs
 class DistinctActivityData(APIView):
@@ -138,3 +173,27 @@ class VariantList(APIView):
         paginated_variants = paginator.paginate_queryset(variants, request)
         serializer = VariantSerializer(paginated_variants, many=True)
         return paginator.get_paginated_response(serializer.data)
+
+class BillList(APIView):
+    def get(self, request, format=None):
+        """
+        Handle GET request to list all Bills."
+        """
+        try:
+            bills = Bill.objects.all()
+            serializer = BillSerializer(bills, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+        
+class ReworkList(APIView):
+    def get(self, request, format=None):
+        """
+        Handle GET request to list all Reworks."
+        """
+        try:
+            reworks = Rework.objects.all()
+            serializer = ReworkSerializer(reworks, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
