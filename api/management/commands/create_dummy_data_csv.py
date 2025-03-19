@@ -65,7 +65,11 @@ class Command(BaseCommand):
     def update_case(self, case: Case, activity):
         case.last_timestamp +=  timedelta(hours=random.expovariate(1/12))
         case.state = activity
-        self.write_in_file(case, activity)
+        case2 = Case.objects.get(id=case.case_id)
+        case2.state = activity
+        case2.save()
+
+        #self.write_in_file(case, activity)
 
     def start(self):
         case_type = random.choice(['Renewal', 'Issuance', 'Policy onboarding'])
@@ -349,6 +353,9 @@ class Command(BaseCommand):
         if rand_num <= 80:
             self.update_case(case, 'Finalizar proceso de emision')
             self.update_case(case, 'Recepcion pago')
+            case2 = Case.objects.get(id=case.case_id)
+            case2.approved = True
+            case2.save()
 
         
         elif rand_num <= 90:
