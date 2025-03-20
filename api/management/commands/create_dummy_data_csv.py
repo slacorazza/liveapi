@@ -69,7 +69,7 @@ class Command(BaseCommand):
         case2.state = activity
         case2.save()
 
-        #self.write_in_file(case, activity)
+        self.write_in_file(case, activity)
 
     def start(self):
         case_type = random.choice(['Renewal', 'Issuance', 'Policy onboarding'])
@@ -78,9 +78,19 @@ class Command(BaseCommand):
         value = random.randint(10, 100)*100
         insurance = f"{random.randint(1, 100000):06d}"
         case = self.Case(case_id, case_type, initial_timestamp, branch=random.choice(BRANCHES), ramo=random.choice(RAMOS), brocker=random.choice(NAMES), state = 'Start', client =random.choice(NAMES), creator = random.choice(NAMES), value=value, insurance=insurance)
+        rand_num = random.randint(1, 100)
+        if rand_num <= 10:
+            insurance_creation = initial_timestamp - timedelta(days=random.randint(1, 5))
+            insurance_start = initial_timestamp - timedelta(days=random.randint(1, 5))
+            insurance_end = insurance_start + timedelta(days=random.choice([180, 365, 730]))
+        else:
+            insurance_creation = initial_timestamp + timedelta(days=random.randint(1, 5))
+            insurance_start = initial_timestamp + timedelta(days=random.randint(1, 5))
+            insurance_end = insurance_start + timedelta(days=random.choice([180, 365, 730]))
+        
 
-
-        Case.objects.create(id=case.case_id, type=case.type, avg_time=0, branch=case.branch, ramo=case.ramo, brocker=case.brocker, state=case.state, client=case.client, creator=case.creator, value=case.value, insurance=insurance)
+        Case.objects.create(id=case.case_id, type=case.type, avg_time=0, branch=case.branch, ramo=case.ramo, brocker=case.brocker, state=case.state, client=case.client, creator=case.creator, value=case.value, insurance=insurance, insurance_creation=insurance_creation, insurance_start=insurance_start, insurance_end=insurance_end)
+        
         if case_type == 'Policy onboarding':
             self.ingresar_tramite(case)
         elif case_type == 'Renewal':
@@ -117,13 +127,14 @@ class Command(BaseCommand):
         rand_num = random.randint(1, 100)
         if rand_num <= 10:
             self.update_case(case, 'Devolucion al brocker del caso (Revision Brocker)')
-            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id)).last()
             return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name = 'Registrar PO').first()
             if return_activity:
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost, target= 'Registrar PO')
+            cause = random.choice(['Falta de información', 'Información incorrecta', 'Información incompleta', 'Información duplicada', 'Documentos incorrectos', 'Documentos incompletos', 'Documentos duplicados'])
+            Rework.objects.create(activity=activity, cost = cost, target= 'Registrar PO', cause=cause)
             
             self.registrar_PO(case)
         else:
@@ -171,13 +182,14 @@ class Command(BaseCommand):
         rand_num = random.randint(1, 100)
         if rand_num <= 10:
             self.update_case(case, 'Devolver caso a Comercial')
-            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id)).last()
             return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name = 'Enviar a Revisión suscripción').first()
             if return_activity:
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost, target = 'Enviar a Revisión suscripción')
+            cause = random.choice(['Falta de información', 'Información incorrecta', 'Información incompleta', 'Información duplicada', 'Documentos incorrectos', 'Documentos incompletos', 'Documentos duplicados'])
+            Rework.objects.create(activity=activity, cost = cost, target = 'Enviar a Revisión suscripción', cause=cause)
 
             self.enviar_revision_suscripcion(case)
         else:
@@ -196,13 +208,14 @@ class Command(BaseCommand):
         rand_num = random.randint(1, 50)
         if rand_num <= 10:
             self.update_case(case, 'Realizar devolucion desde suscripcion')
-            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id)).last()
             return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name = 'Enviar a Revisión suscripción').first()
             if return_activity:
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost, target = 'Enviar a Revisión suscripción')
+            cause = random.choice(['Falta de información', 'Información incorrecta', 'Información incompleta', 'Información duplicada', 'Documentos incorrectos', 'Documentos incompletos', 'Documentos duplicados'])
+            Rework.objects.create(activity=activity, cost = cost, target = 'Enviar a Revisión suscripción', cause=cause)
 
             self.enviar_revision_suscripcion(case)
         elif rand_num <= 50:
@@ -260,13 +273,14 @@ class Command(BaseCommand):
         rand_num = random.randint(1, 100)
         if rand_num <= 10:
             self.update_case(case, 'Devolucion a comercial desde visado')
-            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id)).last()
             return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Visado').first()
             if return_activity:
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost, target = 'Visado')
+            cause = random.choice(['Falta de información', 'Información incorrecta', 'Información incompleta', 'Información duplicada', 'Documentos incorrectos', 'Documentos incompletos', 'Documentos duplicados'])
+            Rework.objects.create(activity=activity, cost = cost, target = 'Visado', cause=cause)
 
             self.visado(case)
         else:
@@ -286,24 +300,26 @@ class Command(BaseCommand):
         rand_num = random.randint(1, 100)
         if rand_num <= 10:
             self.update_case(case, 'Devolucion a comercial desde emisión')
-            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id)).last()
             return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Revisión en emisión').first()
             if return_activity:
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost, target = 'Revisión en emisión')
+            cause = random.choice(['Falta de información', 'Información incorrecta', 'Información incompleta', 'Información duplicada', 'Documentos incorrectos', 'Documentos incompletos', 'Documentos duplicados'])
+            Rework.objects.create(activity=activity, cost = cost, target = 'Revisión en emisión', cause=cause)
 
             self.revision_emision(case)
         elif rand_num <= 20:
             self.update_case(case, 'Devolucion a visado desde emisión')
-            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id)).last()
             return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Visado').first()
             if return_activity:
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost, target = 'Visado')
+            cause = random.choice(['Falta de información', 'Información incorrecta', 'Información incompleta', 'Información duplicada', 'Documentos incorrectos', 'Documentos incompletos', 'Documentos duplicados'])
+            Rework.objects.create(activity=activity, cost = cost, target = 'Visado', cause=cause)
 
             self.visado(case)
         elif rand_num <= 50:
@@ -360,24 +376,26 @@ class Command(BaseCommand):
         
         elif rand_num <= 90:
             self.update_case(case, 'Devolucion a emision (corregir informacion)')
-            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id)).last()
             return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Finalizar envio poliza y factura al cliente').first()
             if return_activity:
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost, target = 'Finalizar envio poliza y factura al cliente')
+            cause = random.choice(['Falta de información', 'Información incorrecta', 'Información incompleta', 'Información duplicada', 'Documentos incorrectos', 'Documentos incompletos', 'Documentos duplicados'])
+            Rework.objects.create(activity=activity, cost = cost, target = 'Finalizar envio poliza y factura al cliente', cause=cause)
 
             self.finalizar_poliza_factura_cliente(case)
         else:
             self.update_case(case, 'Devolucion a comercial (corregir informacion)')
-            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), timestamp=case.last_timestamp).first()
+            activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id)).last()
             return_activity = Activity.objects.filter(case=Case.objects.get(id=case.case_id), name='Finalizar envio poliza y factura al cliente').first()
             if return_activity:
                 cost = (activity.timestamp - return_activity.timestamp).total_seconds()
             else:
                 cost = 0
-            Rework.objects.create(activity=activity, cost = cost, target = 'Finalizar envio poliza y factura al cliente')
+            cause = random.choice(['Falta de información', 'Información incorrecta', 'Información incompleta', 'Información duplicada', 'Documentos incorrectos', 'Documentos incompletos', 'Documentos duplicados'])
+            Rework.objects.create(activity=activity, cost = cost, target = 'Finalizar envio poliza y factura al cliente', cause=cause)
 
             self.finalizar_poliza_factura_cliente(case)
 

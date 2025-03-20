@@ -36,7 +36,7 @@ class AiAssistant(APIView):
             client = get_openai_client()
             self.conversation_history.append({"role": "user", "content": message})
             completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o",
                 messages=self.conversation_history
             )
             return completion.choices[0].message.content

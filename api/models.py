@@ -21,6 +21,10 @@ class Case(models.Model):
     creator = models.CharField(max_length=25, default='None')
     value = models.IntegerField(default=0)
     approved = models.BooleanField(default=False)
+    insurance_creation = models.DateTimeField()
+    insurance_start = models.DateTimeField()
+    insurance_end = models.DateTimeField()
+
 
     def __str__(self):
         return f"Case {self.id}"
@@ -101,6 +105,7 @@ class Rework(models.Model):
     activity = models.ForeignKey(Activity, related_name='reworks', on_delete=models.CASCADE)
     cost = models.IntegerField(default=0)
     target = models.CharField(max_length=250, default='None')
+    cause = models.CharField(max_length=250, default='None')
 
     def __str__(self):
         return f"{self.case.id} - {self.value} at {self.timestamp}"
