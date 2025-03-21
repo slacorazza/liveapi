@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import Case, Activity, Variant, Bill, Rework
+from .models import Case, Activity, Variant
+
+
+## Serializer are used to convert complex data types, such as querysets and model instances, to native Python datatypes that can then be easily rendered into JSON, XML or other content types.
 
 class CaseSerializer(serializers.ModelSerializer):
     """
@@ -48,36 +51,3 @@ class VariantSerializer(serializers.ModelSerializer):
         model = Variant
         fields = ['id', 'activities', 'cases', 'number_cases', 'percentage', 'avg_time']
         
-class BillSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Bill model.
-
-    This serializer converts Bill instances to native Python datatypes
-    that can be easily rendered into JSON, XML or other content types.
-
-    Meta:
-        model (Bill): The model to be serialized.
-        fields (list): The fields of the model to be serialized.
-    """
-    case = CaseSerializer()
-
-    class Meta:
-        model = Bill
-        fields = ['id', 'case', 'timestamp', 'value']
-
-class ReworkSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Rework model.
-
-    This serializer converts Rework instances to native Python datatypes.
-    """
-    activity = ActivitySerializer()
-    case = serializers.SerializerMethodField()
-
-    def get_case(self, obj):
-        return CaseSerializer(obj.activity.case).data
-
-    class Meta:
-        model = Rework
-        fields = ['id', 'activity', 'case', 'cost', 'target', 'cause']
-

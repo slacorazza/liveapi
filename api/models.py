@@ -9,22 +9,8 @@ class Case(models.Model):
     Attributes:
         id (int): The primary key for the case.
     """
-    id = models.CharField(max_length=25, primary_key=True)
-    insurance = models.IntegerField(default=0)
+    id = models.AutoField(primary_key=True)
     avg_time = models.FloatField(default=0)
-    type = models.CharField(max_length=25, default='None')
-    branch = models.CharField(max_length=25, default='None')
-    ramo = models.CharField(max_length=25, default='None')
-    brocker = models.CharField(max_length=25, default='None')
-    state = models.CharField(max_length=25, default='None')
-    client = models.CharField(max_length=25, default='None')
-    creator = models.CharField(max_length=25, default='None')
-    value = models.IntegerField(default=0)
-    approved = models.BooleanField(default=False)
-    insurance_creation = models.DateTimeField()
-    insurance_start = models.DateTimeField()
-    insurance_end = models.DateTimeField()
-
 
     def __str__(self):
         return f"Case {self.id}"
@@ -43,7 +29,7 @@ class Activity(models.Model):
     id = models.AutoField(primary_key=True)
     case = models.ForeignKey(Case, related_name='activities', on_delete=models.CASCADE)
     timestamp = models.DateTimeField()
-    name = models.CharField(max_length=25)
+    name = models.CharField(max_length=25, choices=ACTIVITY_CHOICES)
     case_index = models.IntegerField(default=0)
     tpt = models.FloatField(default=0)
 
@@ -68,44 +54,3 @@ class Variant(models.Model):
 
     def __str__(self):
         return self.name
-    
-
-class Bill(models.Model):
-    """
-    A model representing a bill.
-
-    Attributes:
-        id (int): The primary key for the bill.
-        case (Case): The ID of the related case.
-        timestamp (datetime): The timestamp of the bill.
-        value (int): The value of the bill.
-        payment_frequency (str): The frequency of the payment (annually or monthly).
-    """
-
-    id = models.AutoField(primary_key=True)
-    case = models.ForeignKey(Case, related_name='bills', on_delete=models.CASCADE)
-    timestamp = models.DateTimeField()
-    value = models.IntegerField(default=0)
-
-    def __str__(self):
-        return f"{self.case.id} - {self.value} at {self.timestamp} ({self.payment_frequency})"
-    
-class Rework(models.Model):
-    """
-    A model representing a rework.
-
-    Attributes:
-        id (int): The primary key for the rework.
-        case (Case): The ID of the related case.
-        timestamp (datetime): The timestamp of the rework.
-        value (int): The value of the rework.
-    """
-
-    id = models.AutoField(primary_key=True)
-    activity = models.ForeignKey(Activity, related_name='reworks', on_delete=models.CASCADE)
-    cost = models.IntegerField(default=0)
-    target = models.CharField(max_length=250, default='None')
-    cause = models.CharField(max_length=250, default='None')
-
-    def __str__(self):
-        return f"{self.case.id} - {self.value} at {self.timestamp}"
