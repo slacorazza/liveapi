@@ -5,6 +5,14 @@ from .openai_client import get_openai_client
 
 
 class Alerts(APIView):
+    """
+    Class-based view to handle alerts-related API requests.
+    Methods:
+        get(request, format=None):
+            Handles GET requests and returns a response containing alert details.
+            The response includes information about new invoices, duplicate invoices,
+            the type of alert, a message describing the alert, and a unique identifier (UUID).
+    """
 
     def get(self, request, format=None):
         return Response({
@@ -20,6 +28,31 @@ class Alerts(APIView):
         })
 
 class AiAssistant(APIView):
+    """
+    AiAssistant is a Django APIView that serves as an interface for interacting with an AI assistant 
+    called Sofia, designed to provide insights and advice about process mining analysis.
+    Attributes:
+        conversation_history (list): A predefined list of system messages that sets the context 
+            and behavior of the AI assistant.
+    Methods:
+        message_openai(message):
+            Sends a message to the OpenAI API and retrieves a response from the AI assistant.
+            Args:
+                message (str): The user's input message.
+            Returns:
+                str: The AI assistant's response.
+            Raises:
+                Exception: If there is an error communicating with the OpenAI API.
+        post(request, format=None):
+            Handles POST requests to interact with the AI assistant.
+            Args:
+                request (Request): The HTTP request containing the user's message.
+                format (str, optional): The format of the request. Defaults to None.
+            Returns:
+                Response: A JSON response containing the AI assistant's reply or an error message.
+            Raises:
+                Exception: If there is an error processing the request.
+    """
     conversation_history = [
         {"role": "system", "content": "You are a helpful assistant called Sofia. You were designed by the company Ofiservices to help with process mining analysis. Your main function is to give the user meaningful insights and advice about the processes in the system."},
         {"role": "system", "content": "Each case has this information: id (a number between 1 and 1000), type (can be Renewal, Policy onboarding or Issuance), branch (a number between 1 and 10), ramo (Crop Insurance, Marine Insurance, Travel Insurance, Pet Insurance, Life Insurance, Auto Insurance), brocker (Sean, Priscilla, Courtney, Edward, Darlene, Tamara, Hazel, Ralph, Miranda, Todd, Matthew, Sophia, Eva, Dean), client (Sean, Priscilla, Courtney, Edward, Darlene, Tamara, Hazel, Ralph, Miranda, Todd, Matthew, Sophia, Eva, Dean), creator (Sean, Priscilla, Courtney, Edward, Darlene, Tamara, Hazel, Ralph, Miranda, Todd, Matthew, Sophia, Eva, Dean)."},

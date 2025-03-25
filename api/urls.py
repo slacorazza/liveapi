@@ -5,14 +5,13 @@ This module defines the URL patterns for the API endpoints and maps them to the 
 Endpoints:
 - cases/ : List and create cases.
 - activities/ : List and create activities.
-- cases/<int:id>/ : Retrieve, update, and destroy a specific case by ID.
 - activities/<int:id>/ : Retrieve, update, and destroy a specific activity by ID.
 - activity-list/ : List all activities.
 - meta-data/ : Retrieve distinct activity data.
 - variants/ : List all variants.
 - KPI/ : List all KPIs.
-- nopag/ : List all activities without pagination.
-- avg-time-pair/ : Retrieve average time between activity pairs.
+- bills/ : List all bills.
+- reworks/ : List all reworks.
 """
 from . import views
 
@@ -24,5 +23,6 @@ urlpatterns = [
     path('variants/', views.VariantList.as_view(), name='variant-list'),
     path('bills/', views.BillList.as_view(), name='bill-list'),
     path('reworks/', views.ReworkList.as_view(), name='rework-list'),
+    path('KPI/', views.KPIList.as_view(), name='KPI-list'),
 
 ]

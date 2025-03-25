@@ -8,6 +8,20 @@ class Case(models.Model):
 
     Attributes:
         id (int): The primary key for the case.
+        insurance (int): The insurance of the case.
+        avg_time (float): The time that took the case to complete.
+        type (str): The type of the case, it can be Issuance, Policy onboarding or Renewal.
+        branch (str): The branch of the case.
+        ramo (str): The type of insurance of the case.
+        brocker (str): The brocker of the insurance.
+        state (str): The final state of the case.
+        client (str): The client of the insurance.
+        creator (str): The creator of the case.
+        value (int): The value of the insurance.
+        approved (bool): The final approval status of the case.
+        insurance_creation (datetime): The timestamp of the insurance creation.
+        insurance_start (datetime): The timestamp of when the insurance coverage starts.
+        insurance_end (datetime): The timestamp of when the insurance coverage ends.
     """
     id = models.CharField(max_length=25, primary_key=True)
     insurance = models.IntegerField(default=0)
@@ -35,10 +49,11 @@ class Activity(models.Model):
 
     Attributes:
         id (int): The primary key for the activity.
-        case (Case): The ID of the related case.
+        case (Case): The related case of the activity
         timestamp (datetime): The timestamp of the activity.
         name (str): The name of the activity, chosen from ACTIVITY_CHOICES.
         case_index (int): The index of the case, with a default value of 0.
+        tpt (float): The time per task of the activity, with a default value of 0.
     """
     id = models.AutoField(primary_key=True)
     case = models.ForeignKey(Case, related_name='activities', on_delete=models.CASCADE)
@@ -58,6 +73,9 @@ class Variant(models.Model):
         id (int): The primary key for the variant.
         activities (str): The activities of the variant.
         cases (str): The cases of the variant.
+        number_cases (int): The amount of cases of the variant.
+        percentage (float): The percentage of cases the variant includes.
+        avg_time (float): The average time per case of the variant.
     """
     id = models.AutoField(primary_key=True)
     activities = models.CharField(max_length=50)
@@ -79,7 +97,6 @@ class Bill(models.Model):
         case (Case): The ID of the related case.
         timestamp (datetime): The timestamp of the bill.
         value (int): The value of the bill.
-        payment_frequency (str): The frequency of the payment (annually or monthly).
     """
 
     id = models.AutoField(primary_key=True)
@@ -96,9 +113,10 @@ class Rework(models.Model):
 
     Attributes:
         id (int): The primary key for the rework.
-        case (Case): The ID of the related case.
-        timestamp (datetime): The timestamp of the rework.
-        value (int): The value of the rework.
+        activity (Activity): The related activity where the rework happened.
+        cost (int): The cost in seconds of the rework.
+        target (str): The target of the return.
+        cause (str): The cause of the return.
     """
 
     id = models.AutoField(primary_key=True)
