@@ -24,20 +24,15 @@ class Case(models.Model):
         insurance_end (datetime): The timestamp of when the insurance coverage ends.
     """
     id = models.CharField(max_length=25, primary_key=True)
-    insurance = models.IntegerField(default=0)
     avg_time = models.FloatField(default=0)
-    type = models.CharField(max_length=25, default='None')
-    branch = models.CharField(max_length=25, default='None')
-    ramo = models.CharField(max_length=25, default='None')
-    brocker = models.CharField(max_length=25, default='None')
+    branch = models.CharField(max_length=25,null=True, blank=True)
+    employee = models.CharField(max_length=25, null=True, blank=True)
     state = models.CharField(max_length=25, default='None')
-    client = models.CharField(max_length=25, default='None')
-    creator = models.CharField(max_length=25, default='None')
+    supplier = models.CharField(max_length=25, null=True, blank=True)
     value = models.IntegerField(default=0)
-    approved = models.BooleanField(default=False)
-    insurance_creation = models.DateTimeField()
-    insurance_start = models.DateTimeField()
-    insurance_end = models.DateTimeField()
+    estimated_delivery = models.DateTimeField(null=True, blank=True)
+    delivery = models.DateTimeField(null=True, blank=True)
+
 
 
     def __str__(self):
